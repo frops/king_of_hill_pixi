@@ -1,5 +1,5 @@
 const RESOURCE_PATH = "spritesheet.json";
-let BackendURL = "http://localhost:8084";
+let BackendURL = "http://localhost:8084/b";
 let centrifugoHost = "localhost:8000";
 let WIDTH = 400;
 let HEIGHT = 700;
@@ -17,7 +17,7 @@ if (mobileCheck()) {
 
 if (MODE != "dev") {
     centrifugoHost = "104.248.41.222:8000";
-    BackendURL = "http://104.248.41.222:8084";
+    BackendURL = "http://104.248.41.222:8084/b;
 }
 
 let w2 = WIDTH / 2;
