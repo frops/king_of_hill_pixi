@@ -1,0 +1,57 @@
+{
+	"meta": {
+		"image": "kinghill.png",
+		"size": {"w":2000,"h":2000},
+		"scale": "1"
+	},
+	"frames": {
+		"btn.png":
+		{
+			"frame": {"x":0,"y":0,"w":323,"h":340},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":323,"h":340},
+			"sourceSize": {"w":323,"h":340}
+		},
+		"btn_pressed.png":
+		{
+			"frame": {"x":323,"y":0,"w":323,"h":340},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":323,"y":0,"w":323,"h":340},
+			"sourceSize": {"w":323,"h":340}
+		},
+		"background.png":
+		{
+			"frame": {"x":0,"y":388,"w":400,"h":900},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":388,"w":400,"h":900},
+			"sourceSize": {"w":400,"h":900}
+		},
+		"man.png": {
+			"frame": {"x":1331,"y":388,"w":400,"h":570},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":400,"y":388,"w":400,"h":570},
+			"sourceSize": {"w":400,"h":570}
+		},
+		"logo.png": {
+			"frame": {"x":1332,"y":1020,"w":540,"h":333},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":1332,"y":1020,"w":540,"h":333},
+			"sourceSize": {"w":540,"h":333}
+		},
+		"play_guest.png": {
+			"frame": {"x":650,"y":0,"w":460,"h":200},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":650,"y":0,"w":460,"h":200},
+			"sourceSize": {"w":460,"h":200}
+		},
+		"back_start.png": {
+			"frame": {"x":1890,"y":0, "w": 400, "h": 900}
+		}
+	}
+}
