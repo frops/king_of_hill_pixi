@@ -1,6 +1,6 @@
 const RESOURCE_PATH = "spritesheet.json";
 let BackendURL = "http://localhost:8084/back";
-let centrifugoHost = "localhost:8000";
+let centrifugoHost = "ws://localhost:8000";
 let WIDTH = 400;
 let HEIGHT = 700;
 const RAY_COUNT = 32;
@@ -16,7 +16,7 @@ if (mobileCheck()) {
 }
 
 if (MODE != "dev") {
-    centrifugoHost = "104.248.41.222:8000";
+    centrifugoHost = "wss://104.248.41.222:8000";
     BackendURL = "https://kh.sopost.ru/back";
 }
 
@@ -347,7 +347,7 @@ function wsInit() {
         return;
     }
 
-    centrifuge = new Centrifuge("ws://" + centrifugoHost + "/connection/websocket", {
+    centrifuge = new Centrifuge(centrifugoHost + "/connection/websocket", {
         debug: true
     });
     centrifuge.setToken(Server.token);
