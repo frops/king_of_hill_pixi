@@ -17,7 +17,7 @@ if (mobileCheck()) {
 
 if (MODE != "dev") {
     centrifugoHost = "ws://kh.sopost.ru";
-    BackendURL = "https://kh.sopost.ru/back";
+    BackendURL = "http://kh.sopost.ru/back";
 }
 
 let w2 = WIDTH / 2;
