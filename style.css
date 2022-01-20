@@ -1,10 +1,10 @@
-body {
+/* body {
     margin: 0 0 0 0;
     width: 100vw;
     height: 100vh;
     display: flex;
     background-color: rgb(255, 255, 255);
-}
+}*/
 
 @media only screen and (max-width: 600px) {
     body {

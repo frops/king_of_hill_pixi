@@ -1,5 +1,5 @@
 const RESOURCE_PATH = "spritesheet.json";
-let BackendURL = "http://localhost:8084/b";
+let BackendURL = "http://localhost:8084/back";
 let centrifugoHost = "localhost:8000";
 let WIDTH = 400;
 let HEIGHT = 700;
@@ -8,7 +8,7 @@ const RAY_MAX_WAY = 100;
 const RAY_SPEED = 0.05;
 const RAY_TIMER = 30;
 const VIEW_SCALE = 0.4;
-const MODE = 'dev';
+const MODE = 'prod';
 
 if (mobileCheck()) {
     WIDTH = window.innerWidth;
@@ -17,7 +17,7 @@ if (mobileCheck()) {
 
 if (MODE != "dev") {
     centrifugoHost = "104.248.41.222:8000";
-    BackendURL = "http://104.248.41.222:8084/b;
+    BackendURL = "https://kh.sopost.ru/back";
 }
 
 let w2 = WIDTH / 2;
@@ -39,7 +39,7 @@ let timerPointFlow = 0;
 let timerClick = 0;
 
 // State for clicking
-let buttonClick = true
+let buttonClick = true;
 
 // Sprites for buttons
 let targetBtn, targetBtnPressed, originalBtnTexture;
