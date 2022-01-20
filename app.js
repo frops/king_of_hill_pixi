@@ -16,7 +16,7 @@ if (mobileCheck()) {
 }
 
 if (MODE != "dev") {
-    centrifugoHost = "wss://104.248.41.222:8000";
+    centrifugoHost = "wss://kh.sopost.ru";
     BackendURL = "https://kh.sopost.ru/back";
 }
 
