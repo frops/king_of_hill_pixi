@@ -6,7 +6,7 @@ let HEIGHT = 700;
 const RAY_COUNT = 32;
 const RAY_MAX_WAY = 100;
 const RAY_SPEED = 0.05;
-const RAY_TIMER = 30;
+const RAY_TIMER = 25;
 const VIEW_SCALE = 0.4;
 const MODE = 'prod';
 
