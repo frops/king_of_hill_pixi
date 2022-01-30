@@ -15,7 +15,7 @@ if (!IS_DEV) {
 Pixi.init(IS_DEV);
 
 // Load server info
-Server.init(BackendURL, centrifugoHost);
+Server.init(BackendURL, centrifugoHost, Game.clickHandler);
 Server.load();
 
 // Init Game

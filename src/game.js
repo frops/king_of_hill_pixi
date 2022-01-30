@@ -9,6 +9,7 @@ export let Game = {
     state: null,
     timerClick: 0,
     buttonClick: true,
+    king: null, // User object
     init: function (Server, Pixi) {
         Game.server = Server;
         Game.pixi = Pixi;
@@ -65,6 +66,9 @@ export let Game = {
             })
         }
     },
+    clickHandler: function (data) {
+        Game.changeKing(data);
+    },
     gameLoop: function (delta) {
         Game.playState(delta);
     },
@@ -79,4 +83,9 @@ export let Game = {
         // Game.pixi.runRays();
         // runPointFlow();
     },
+    changeKing: function(user) {
+        Game.king = user;
+        let isYourself = user.uuid === Game.user.uuid;
+        Game.pixi.changeKing(Game.king, isYourself);
+    }
 };

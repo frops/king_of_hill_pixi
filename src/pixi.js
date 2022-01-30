@@ -21,8 +21,12 @@ export let Pixi = {
     loadingScene: null,
     gameScene: null,
 
+    //Graphics
+    kingBarRect: null,
+
     //Text
     introNameText: null,
+    kingNameText: null,
 
     //Textures
     originalBtnTexture: null,
@@ -93,21 +97,21 @@ export let Pixi = {
             kingBar.y = Pixi.height / 1.7;
             Pixi.gameScene.addChild(kingBar);
 
-            let kingBarRect = new Graphics();
-            kingBarRect.beginFill(0x312259, 0.8)
+            Pixi.kingBarRect = new Graphics();
+            Pixi.kingBarRect.beginFill(0x312259, 0.8)
                 .drawRect(20, 0, Pixi.width - 40, 60)
                 .endFill();
-            kingBar.addChild(kingBarRect);
+            kingBar.addChild(Pixi.kingBarRect);
 
-            let kingName = new Text("", new TextStyle({
+            Pixi.kingNameText = new Text("", new TextStyle({
                 fontFamily: "Verdana",
                 fontSize: 20,
                 fill: "#fff"
             }));
-            kingName.anchor.set(0.5);
-            kingName.x = kingBarRect.width / 2;
-            kingName.y = kingBarRect.height / 2;
-            kingBar.addChild(kingName);
+            Pixi.kingNameText.anchor.set(0.5);
+            Pixi.kingNameText.x = Pixi.kingBarRect.width / 2;
+            Pixi.kingNameText.y = Pixi.kingBarRect.height / 2;
+            kingBar.addChild(Pixi.kingNameText);
 
             // Load another
             // loadMan();
@@ -210,5 +214,16 @@ export let Pixi = {
 
         Pixi.score.text = User.name;
         Pixi.score.x = 10
+    },
+    changeKing: function(user, isYourself) {
+        let text = user.name;
+
+        if (isYourself) {
+            text += " (ТЫ)";
+        }
+
+        Pixi.kingNameText.text = text;
+        Pixi.kingNameText.x = Pixi.kingBarRect.width / 2;
+        Pixi.kingNameText.y = Pixi.kingBarRect.height / 2;
     }
 };

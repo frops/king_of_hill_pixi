@@ -5,9 +5,11 @@ export let Server = {
     isLoaded: false,
     backendURL: "",
     centrifugoHost: "",
-    init: function (BackendURL, CentrifugoHost) {
+    clickHandler: null,
+    init: function (BackendURL, CentrifugoHost, clickHandler) {
         Server.backendURL = BackendURL;
         Server.centrifugoHost = CentrifugoHost;
+        Server.clickHandler = clickHandler;
     },
     load: function () {
         axios.get(Server.backendURL + '/v1/info')
@@ -63,8 +65,9 @@ export let Server = {
         });
 
         centrifuge.subscribe("hill_click", function (ctx) {
-            // changeKing(ctx.data);
-            console.log(ctx, "hill_click")
+            console.log(ctx, "hill_click");
+            console.log(Server.clickHandler, "handler");
+            Server.clickHandler(ctx.data);
         });
 
         centrifuge.connect();
