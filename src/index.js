@@ -7,9 +7,11 @@ let BackendURL = "https://back.kh.loc";
 let centrifugoHost = "wss://centrifugo.kh.loc";
 const IS_DEV = true;
 
-if (!IS_DEV) {
-    centrifugoHost = "ws://kh.sopost.ru";
-    BackendURL = "http://kh.sopost.ru/back";
+console.log(window.location.hostname, "host");
+
+if (window.location.hostname == "bakla.games") {
+    centrifugoHost = "wss://centrifugo.bakla.games";
+    BackendURL = "https://back.bakla.games";
 }
 
 Pixi.init(IS_DEV);
