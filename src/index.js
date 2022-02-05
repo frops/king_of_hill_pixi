@@ -10,7 +10,7 @@ const IS_DEV = true;
 console.log(window.location.hostname, "host");
 
 if (window.location.hostname == "bakla.games") {
-    centrifugoHost = "wss://centrifugo.bakla.games";
+    centrifugoHost = "wss://centrifugo.sopost.ru";
     BackendURL = "https://back.bakla.games";
 }
 
