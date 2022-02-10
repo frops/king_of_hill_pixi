@@ -27,7 +27,7 @@ export let Server = {
     },
     click: function(user, success, error) {
         axios.request({
-            url: Server.backendURL + '/v1/click',
+            url: Server.backendURL + '/v1/game/click',
             method: 'post',
             headers: { "Authorization": "Bearer " + user.jwt },
             withCredentials: true,
