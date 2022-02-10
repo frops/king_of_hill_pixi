@@ -27,6 +27,7 @@ export let Pixi = {
     //Text
     introNameText: null,
     kingNameText: null,
+    kingDuration: null,
 
     //Textures
     originalBtnTexture: null,
@@ -112,6 +113,26 @@ export let Pixi = {
             Pixi.kingNameText.x = Pixi.kingBarRect.width / 2;
             Pixi.kingNameText.y = Pixi.kingBarRect.height / 2;
             kingBar.addChild(Pixi.kingNameText);
+
+            let durationDesc = new Text("Время на горе (в секундах)", new TextStyle({
+                fontFamily: "Verdana",
+                fontSize: 16,
+                fill: "#222"
+            }));
+            durationDesc.anchor.set(0.5);
+            durationDesc.x = Pixi.kingBarRect.width / 2;
+            durationDesc.y = Pixi.kingBarRect.y - durationDesc.height - 80;
+            kingBar.addChild(durationDesc);
+
+            Pixi.kingDuration = new Text("0", new TextStyle({
+                fontFamily: "Verdana",
+                fontSize: 25,
+                fill: "#fff"
+            }));
+            Pixi.kingDuration.anchor.set(0.5);
+            Pixi.kingDuration.x = Pixi.kingBarRect.width / 2;
+            Pixi.kingDuration.y = durationDesc.y + durationDesc.height + 20;
+            kingBar.addChild(Pixi.kingDuration);
 
             // Load another
             // loadMan();
@@ -215,8 +236,8 @@ export let Pixi = {
         Pixi.score.text = User.name;
         Pixi.score.x = 10
     },
-    changeKing: function(user, isYourself) {
-        let text = user.name;
+    changeKing: function(king, isYourself) {
+        let text = king.user.name;
 
         if (isYourself) {
             text += " (ТЫ)";
@@ -225,5 +246,11 @@ export let Pixi = {
         Pixi.kingNameText.text = text;
         Pixi.kingNameText.x = Pixi.kingBarRect.width / 2;
         Pixi.kingNameText.y = Pixi.kingBarRect.height / 2;
+
+        Pixi.updateKingDuration(king.duration);
+    },
+    updateKingDuration: function(duration) {
+        Pixi.kingDuration.text = duration;
+        Pixi.kingDuration.x = Pixi.kingBarRect.width / 2;
     }
 };

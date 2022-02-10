@@ -9,10 +9,26 @@ export let Game = {
     state: null,
     timerClick: 0,
     buttonClick: true,
-    king: null, // User object
+    everySecTimer: null,
+    king: {
+        user: null,
+        boardedAt: null,
+        duration: null,
+    },
     init: function (Server, Pixi) {
         Game.server = Server;
         Game.pixi = Pixi;
+
+        Game.everySecTimer = setInterval(function () {
+            if (Game.server.time !== null) {
+                Game.server.time += 1000;
+            }
+
+            if (Game.king.duration !== null) {
+                Game.king.duration++;
+                Game.pixi.updateKingDuration(Game.king.duration);
+            }
+        }, 1000);
 
         if (!Game.server.isLoaded) {
             console.warn('server not loaded yet');
@@ -45,7 +61,18 @@ export let Game = {
         }
 
         Game.pixi.loadGameScene(Game.user);
+        Game.server.info(function(resp) {
+            Game.setKingFromResp(resp);
+
+            console.log(resp, 'game info');
+            console.log(Game.server.time, 'server time');
+        });
         Game.state = Game.playState;
+    },
+    setKingFromResp: function(resp) {
+        Game.king.boardedAt = new Date(resp.boarded_at).getTime();
+        Game.king.user = resp.user;
+        Game.changeKing();
     },
     handlerClick: function () {
         if (!Game.user.isLoaded) {
@@ -83,9 +110,15 @@ export let Game = {
         // Game.pixi.runRays();
         // runPointFlow();
     },
-    changeKing: function(user) {
-        Game.king = user;
-        let isYourself = user.uuid === Game.user.uuid;
+    setKingFromWs: function (msg) {
+        Game.king.boardedAt = new Date(msg.boarded_at).getTime();
+        Game.king.user.name = msg.name;
+        Game.king.user.uuid = msg.uuid;
+        Game.changeKing();
+    },
+    changeKing: function() {
+        Game.king.duration = parseInt((Game.server.time - Game.king.boardedAt) / 1000);
+        let isYourself = Game.king.user.uuid === Game.user.uuid;
         Game.pixi.changeKing(Game.king, isYourself);
     }
 };

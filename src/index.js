@@ -17,7 +17,7 @@ if (window.location.hostname == "bakla.games") {
 Pixi.init(IS_DEV);
 
 // Load server info
-Server.init(BackendURL, centrifugoHost, Game.clickHandler);
+Server.init(BackendURL, centrifugoHost, Game.setKingFromWs);
 Server.load();
 
 // Init Game

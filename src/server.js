@@ -5,11 +5,11 @@ export let Server = {
     isLoaded: false,
     backendURL: "",
     centrifugoHost: "",
-    clickHandler: null,
-    init: function (BackendURL, CentrifugoHost, clickHandler) {
+    setKingFromWs: null,
+    init: function (BackendURL, CentrifugoHost, setKingFromWs) {
         Server.backendURL = BackendURL;
         Server.centrifugoHost = CentrifugoHost;
-        Server.clickHandler = clickHandler;
+        Server.setKingFromWs = setKingFromWs;
     },
     load: function () {
         axios.get(Server.backendURL + '/v1/info')
@@ -24,6 +24,14 @@ export let Server = {
             }).catch(function (error) {
                 console.error(error);
             });
+    },
+    info: function(success, error) {
+        axios.request({url: Server.backendURL + '/v1/game/info',  withCredentials: true})
+        .then(function (response) {
+            success(response.data.data);
+        }).catch(function (err) {
+            error(err);
+        });
     },
     click: function(user, success, error) {
         axios.request({
@@ -65,9 +73,8 @@ export let Server = {
         });
 
         centrifuge.subscribe("hill_click", function (ctx) {
-            console.log(ctx, "hill_click");
-            console.log(Server.clickHandler, "handler");
-            Server.clickHandler(ctx.data);
+            console.log(ctx.data, "hill_click_ws");
+            Server.setKingFromWs(ctx.data);
         });
 
         centrifuge.connect();
