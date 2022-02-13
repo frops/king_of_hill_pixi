@@ -97,7 +97,7 @@ export let Pixi = {
 
             // Current user
             let kingBar = new Container();
-            kingBar.y = Pixi.height / 1.4;
+            kingBar.y = Pixi.height / 1.7;
             Pixi.gameScene.addChild(kingBar);
 
             Pixi.kingBarRect = new Graphics();
