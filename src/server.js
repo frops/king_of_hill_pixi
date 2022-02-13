@@ -25,12 +25,16 @@ export let Server = {
                 console.error(error);
             });
     },
-    info: function(success, error) {
-        axios.request({url: Server.backendURL + '/v1/game/info',  withCredentials: true})
+    info: function(user, success, error) {
+        axios.request({
+            url: Server.backendURL + '/v1/game/info',
+            headers: { "Authorization": "Bearer " + user.jwt },
+            withCredentials: true,
+        })
         .then(function (response) {
             success(response.data.data);
         }).catch(function (err) {
-            error(err);
+            console.error(err);
         });
     },
     click: function(user, success, error) {
@@ -73,7 +77,6 @@ export let Server = {
         });
 
         centrifuge.subscribe("hill_click", function (ctx) {
-            console.log(ctx.data, "hill_click_ws");
             Server.setKingFromWs(ctx.data);
         });
 

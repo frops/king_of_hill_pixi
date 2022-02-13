@@ -29,6 +29,8 @@ export let Pixi = {
     kingNameText: null,
     kingDuration: null,
 
+    leaderboard: [],
+
     //Textures
     originalBtnTexture: null,
     targetBtn: null,
@@ -95,18 +97,18 @@ export let Pixi = {
 
             // Current user
             let kingBar = new Container();
-            kingBar.y = Pixi.height / 1.7;
+            kingBar.y = Pixi.height / 1.4;
             Pixi.gameScene.addChild(kingBar);
 
             Pixi.kingBarRect = new Graphics();
-            Pixi.kingBarRect.beginFill(0x312259, 0.8)
-                .drawRect(20, 0, Pixi.width - 40, 60)
+            Pixi.kingBarRect.beginFill(0x312259, 0.7)
+                .drawRect(20, 0, Pixi.width - 40, 35)
                 .endFill();
             kingBar.addChild(Pixi.kingBarRect);
 
             Pixi.kingNameText = new Text("", new TextStyle({
                 fontFamily: "Verdana",
-                fontSize: 20,
+                fontSize: 15,
                 fill: "#fff"
             }));
             Pixi.kingNameText.anchor.set(0.5);
@@ -116,23 +118,36 @@ export let Pixi = {
 
             let durationDesc = new Text("Время на горе (в секундах)", new TextStyle({
                 fontFamily: "Verdana",
-                fontSize: 16,
-                fill: "#222"
+                fontSize: 13,
+                fill: "#fff"
             }));
             durationDesc.anchor.set(0.5);
             durationDesc.x = Pixi.kingBarRect.width / 2;
-            durationDesc.y = Pixi.kingBarRect.y - durationDesc.height - 80;
+            durationDesc.y = Pixi.kingBarRect.y - durationDesc.height - 40;
             kingBar.addChild(durationDesc);
 
             Pixi.kingDuration = new Text("0", new TextStyle({
                 fontFamily: "Verdana",
-                fontSize: 25,
+                fontSize: 23,
                 fill: "#fff"
             }));
             Pixi.kingDuration.anchor.set(0.5);
             Pixi.kingDuration.x = Pixi.kingBarRect.width / 2;
-            Pixi.kingDuration.y = durationDesc.y + durationDesc.height + 20;
+            Pixi.kingDuration.y = durationDesc.y + durationDesc.height + 15;
             kingBar.addChild(Pixi.kingDuration);
+
+            for (let i = 0; i < 3; i++) {
+                let num = i + 1;
+
+                Pixi.leaderboard[i] = new Text(num + ": -", new TextStyle({
+                    fontFamily: "Verdana",
+                    fontSize: 12,
+                    fill: "#000"
+                }));
+                Pixi.leaderboard[i].x = 20;
+                Pixi.leaderboard[i].y = kingBar.y - 150 + (i * (Pixi.leaderboard[i].height + 5));
+                Pixi.gameScene.addChild(Pixi.leaderboard[i]);
+            }
 
             // Load another
             // loadMan();
@@ -240,7 +255,10 @@ export let Pixi = {
         let text = king.user.name;
 
         if (isYourself) {
-            text += " (ТЫ)";
+            text = ">> " + text + " <<";
+            Pixi.kingNameText.style.fill = "#ffcf4a";
+        } else {
+            Pixi.kingNameText.style.fill = "#fff";
         }
 
         Pixi.kingNameText.text = text;
@@ -250,7 +268,14 @@ export let Pixi = {
         Pixi.updateKingDuration(king.duration);
     },
     updateKingDuration: function(duration) {
-        Pixi.kingDuration.text = duration;
+        Pixi.kingDuration.text = Math.max(0, duration);
         Pixi.kingDuration.x = Pixi.kingBarRect.width / 2;
+    },
+    changeLeaderBoard: function(leaderboard) {
+        for (let i = 0; i < 3; i++) {
+            let num = i + 1;
+
+            Pixi.leaderboard[i].text = leaderboard[i].duration + ": " + leaderboard[i].name;
+        }
     }
 };

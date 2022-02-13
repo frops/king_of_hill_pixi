@@ -61,8 +61,9 @@ export let Game = {
         }
 
         Game.pixi.loadGameScene(Game.user);
-        Game.server.info(function(resp) {
-            Game.setKingFromResp(resp);
+        Game.server.info(Game.user, function(resp) {
+            Game.setKingFromResp(resp.king);
+            Game.pixi.changeLeaderBoard(resp.leaderboard);
 
             console.log(resp, 'game info');
             console.log(Game.server.time, 'server time');
@@ -85,7 +86,6 @@ export let Game = {
             Game.timerClick = 10;
 
             Game.pixi.targetBtn.texture = Game.pixi.targetBtnPressed.texture;
-            //resetRayLines(e);
             // resetPointFlow(e, damage)
 
             Game.server.click(Game.user, function(resp) {
@@ -115,6 +115,7 @@ export let Game = {
         Game.king.user.name = msg.name;
         Game.king.user.uuid = msg.uuid;
         Game.changeKing();
+        Game.pixi.changeLeaderBoard(msg.leaderboard);
     },
     changeKing: function() {
         Game.king.duration = parseInt((Game.server.time - Game.king.boardedAt) / 1000);
