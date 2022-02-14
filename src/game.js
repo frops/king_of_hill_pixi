@@ -64,6 +64,7 @@ export let Game = {
         Game.server.info(Game.user, function(resp) {
             Game.setKingFromResp(resp.king);
             Game.pixi.changeLeaderBoard(resp.leaderboard);
+            Game.pixi.updateUserDuration(resp.user_info.duration);
 
             console.log(resp, 'game info');
             console.log(Game.server.time, 'server time');
@@ -89,7 +90,8 @@ export let Game = {
             // resetPointFlow(e, damage)
 
             Game.server.click(Game.user, function(resp) {
-                console.log(resp);
+                console.log(resp, 'resp5')
+                Game.pixi.updateUserDuration(resp.data.data.duration);
             })
         }
     },

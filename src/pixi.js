@@ -36,6 +36,7 @@ export let Pixi = {
     targetBtn: null,
     targetBtnPressed: null,
     score: null,
+    duration: null,
     lines: [],
 
     // Functions
@@ -95,6 +96,15 @@ export let Pixi = {
             Pixi.score.y = (scoreBar.height / 2);
             scoreBar.addChild(Pixi.score);
 
+            Pixi.duration = new Text("", new TextStyle({
+                fontFamily: "Verdana",
+                fontSize: '10pt',
+                fill: "#edd100"
+            }));
+            Pixi.duration.x = scoreBar.width - Pixi.duration.width - 70;
+            Pixi.duration.y = (scoreBar.height / 2);
+            scoreBar.addChild(Pixi.duration);
+
             // Current user
             let kingBar = new Container();
             kingBar.y = Pixi.height / 1.7;
@@ -116,10 +126,10 @@ export let Pixi = {
             Pixi.kingNameText.y = Pixi.kingBarRect.height / 2;
             kingBar.addChild(Pixi.kingNameText);
 
-            let durationDesc = new Text("Время на горе (в секундах)", new TextStyle({
+            let durationDesc = new Text("Время", new TextStyle({
                 fontFamily: "Verdana",
                 fontSize: 13,
-                fill: "#fff"
+                fill: "#eee"
             }));
             durationDesc.anchor.set(0.5);
             durationDesc.x = Pixi.kingBarRect.width / 2;
@@ -138,14 +148,16 @@ export let Pixi = {
 
             for (let i = 0; i < 3; i++) {
                 let num = i + 1;
+                let font = ((2 - i) * 2) + 10;
+            
 
                 Pixi.leaderboard[i] = new Text(num + ": -", new TextStyle({
                     fontFamily: "Verdana",
-                    fontSize: 12,
+                    fontSize: font,
                     fill: "#000"
                 }));
                 Pixi.leaderboard[i].x = 20;
-                Pixi.leaderboard[i].y = kingBar.y - 150 + (i * (Pixi.leaderboard[i].height + 5));
+                Pixi.leaderboard[i].y = kingBar.y - 150 + (i * (Pixi.leaderboard[i].height + 10));
                 Pixi.gameScene.addChild(Pixi.leaderboard[i]);
             }
 
@@ -256,7 +268,7 @@ export let Pixi = {
 
         if (isYourself) {
             text = ">> " + text + " <<";
-            Pixi.kingNameText.style.fill = "#ffcf4a";
+            Pixi.kingNameText.style.fill = "#edd100";
         } else {
             Pixi.kingNameText.style.fill = "#fff";
         }
@@ -270,6 +282,10 @@ export let Pixi = {
     updateKingDuration: function(duration) {
         Pixi.kingDuration.text = Math.max(0, duration);
         Pixi.kingDuration.x = Pixi.kingBarRect.width / 2;
+    },
+    updateUserDuration: function(duration) {
+        Pixi.duration.text = duration;
+        Pixi.duration.x = Pixi.gameScene.width - Pixi.duration.width - 30;
     },
     changeLeaderBoard: function(leaderboard) {
         for (let i = 0; i < 3; i++) {

@@ -4,6 +4,7 @@ body {
     height: 100vh; */
     display: flex;
     background-color: rgb(255, 255, 255);
+    overflow: hidden;
 }
 
 @media only screen and (max-width: 600px) {
