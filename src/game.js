@@ -120,6 +120,7 @@ export let Game = {
         Game.pixi.changeLeaderBoard(msg.leaderboard);
     },
     changeKing: function() {
+        console.log(Game.server.time + " - " + Game.king.boardedAt, 'll');
         Game.king.duration = parseInt((Game.server.time - Game.king.boardedAt) / 1000);
         let isYourself = Game.king.user.uuid === Game.user.uuid;
         Game.pixi.changeKing(Game.king, isYourself);

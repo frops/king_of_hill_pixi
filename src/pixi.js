@@ -289,6 +289,10 @@ export let Pixi = {
     },
     changeLeaderBoard: function(leaderboard) {
         for (let i = 0; i < 3; i++) {
+            if (typeof leaderboard[i] === 'undefined') {
+                continue;
+            }
+
             let num = i + 1;
 
             Pixi.leaderboard[i].text = leaderboard[i].duration + ": " + leaderboard[i].name;

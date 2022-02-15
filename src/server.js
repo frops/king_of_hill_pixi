@@ -20,7 +20,7 @@ export let Server = {
                 Server.version = raw.version;
                 Server.isLoaded = true;
                 Server.wsInit();
-                console.log('SERVER INFO loaded');
+                console.log(Server, 'SERVER INFO loaded');
             }).catch(function (error) {
                 console.error(error);
             });
