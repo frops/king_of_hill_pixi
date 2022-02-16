@@ -215,8 +215,8 @@ export let Pixi = {
         }, 500);
     },
     loadTargetBtn: function (texture, handlerClick) {
-        Pixi.targetBtn = new TilingSprite(texture, 240, 215);
-        Pixi.targetBtn.position.set(0, 20);
+        Pixi.targetBtn = new TilingSprite(texture, 230, 235);
+        Pixi.targetBtn.position.set(0, 0);
 
         Pixi.targetBtn.x = WIDTH / 2 - (Pixi.targetBtn.width / 2);
         Pixi.targetBtn.y = HEIGHT - (Pixi.targetBtn.height) - 50;
@@ -227,7 +227,7 @@ export let Pixi = {
     },
     toggleBtnState: function(press) {
         if (press) {
-            Pixi.targetBtn.tilePosition.y = 215
+            Pixi.targetBtn.tilePosition.y = 235;
         } else {
             Pixi.targetBtn.tilePosition.y = 0;
         }
