@@ -3,7 +3,7 @@ import { Pixi } from "./pixi.js";
 import { Game } from "./game.js";
 import { Server } from "./server.js";
 
-//let BackendURL = "https://back.kh.loc";
+// let BackendURL = "https://back.kh.loc";
 let BackendURL = "http://127.0.0.1:8084";
 let centrifugoHost = "wss://centrifugo.kh.loc";
 const IS_DEV = true;

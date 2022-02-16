@@ -1,12 +1,9 @@
-import { Application, Container, Sprite, Text, TextStyle, Graphics } from "pixi.js";
+import { Application, Container, Sprite, TilingSprite, Text, TextStyle, Graphics } from "pixi.js";
 import * as helpers from "./helpers.js";
 
 const RESOURCE_PATH = "spritesheet.json";
-const RAY_COUNT = 16;
-const RAY_MAX_WAY = 100;
-const RAY_SPEED = 0.05;
-const RAY_TIMER = 25;
-const VIEW_SCALE = 0.4;
+const WIDTH = 720;
+const HEIGHT = 1280;
 
 export let Pixi = {
     app: null,
@@ -20,9 +17,6 @@ export let Pixi = {
     introScene: null,
     loadingScene: null,
     gameScene: null,
-
-    //Graphics
-    kingBarRect: null,
 
     //Text
     introNameText: null,
@@ -41,29 +35,32 @@ export let Pixi = {
 
     // Functions
     init: function (isDev) {
-        Pixi.width = 410;
-        Pixi.height = 800;
+        Pixi.width = WIDTH;
+        Pixi.height = HEIGHT;
         Pixi.isDev = isDev;
 
-        if (helpers.mobileCheck()) { // if is mobile device
-            Pixi.width = window.innerWidth;
-            Pixi.height = window.innerHeight;
-        }
+        // if (helpers.mobileCheck()) { // if is mobile device
+        //     Pixi.width = 720;
+        //     Pixi.height = 1280;
+        // }
 
         // Pixi Application
         Pixi.app = new Application({
             width: Pixi.width,
             height: Pixi.height,
             antialias: true,
-            // resolution: window.devicePixelRatio // For good rendering on mobiles
+            resolution: window.devicePixelRatio // For good rendering on mobiles
         });
-        document.body.appendChild(Pixi.app.view);
+        document.querySelector('.container').appendChild(Pixi.app.view);
     },
     load: function (playGuest, handlerClick, gameLoop) {
-        Pixi.app.loader.add(RESOURCE_PATH);
+        Pixi.app.loader
+            .add(RESOURCE_PATH)
+            .add('main_btn', 'img/main_btn.png')
+            .add('back_game', 'img/back_game.jpg');
 
         Pixi.app.loader.load(() => {
-            Pixi.textures = Pixi.app.loader.resources[RESOURCE_PATH].textures
+            Pixi.textures = Pixi.app.loader.resources[RESOURCE_PATH].textures;
             Pixi.showIntroScene(playGuest);
 
             Pixi.gameScene = new Container();
@@ -71,7 +68,7 @@ export let Pixi = {
             Pixi.app.stage.addChild(Pixi.gameScene);
 
             // Background
-            let bg = new Sprite(Pixi.textures["back_start.png"]);
+            let bg = new Sprite(Pixi.app.loader.resources['back_game'].texture);
             bg.width = Pixi.width;
             bg.height = Pixi.height;
             bg.anchor.set(0, 0);
@@ -81,90 +78,73 @@ export let Pixi = {
             let scoreBar = new Container();
             Pixi.gameScene.addChild(scoreBar);
 
-            let rectangle = new Graphics();
-            rectangle.beginFill(0x312259)
-                .drawRect(0, 0, Pixi.gameScene.width, 60)
-                .endFill();
-            scoreBar.addChild(rectangle);
-
-            Pixi.score = new Text("", new TextStyle({
+            Pixi.username = new Text("", new TextStyle({
                 fontFamily: "Verdana",
-                fontSize: '10pt',
-                fill: "#fff"
+                fontSize: 25,
+                fill: "#FFDC5F"
             }));
-            Pixi.score.x = 0;
-            Pixi.score.y = (scoreBar.height / 2);
-            scoreBar.addChild(Pixi.score);
+            Pixi.username.x = 0;
+            Pixi.username.y = 45;
+            scoreBar.addChild(Pixi.username);
 
-            Pixi.duration = new Text("", new TextStyle({
+            Pixi.userScore = new Text("", new TextStyle({
                 fontFamily: "Verdana",
-                fontSize: '10pt',
-                fill: "#edd100"
+                fontSize: 25,
+                fill: "#68D413"
             }));
-            Pixi.duration.x = scoreBar.width - Pixi.duration.width - 70;
-            Pixi.duration.y = (scoreBar.height / 2);
-            scoreBar.addChild(Pixi.duration);
+            Pixi.userScore.x = WIDTH - Pixi.userScore.width - 100;
+            Pixi.userScore.y = 45;
+            scoreBar.addChild(Pixi.userScore);
 
             // Current user
-            let kingBar = new Container();
-            kingBar.y = Pixi.height / 1.7;
-            Pixi.gameScene.addChild(kingBar);
-
-            Pixi.kingBarRect = new Graphics();
-            Pixi.kingBarRect.beginFill(0x312259, 0.7)
-                .drawRect(20, 0, Pixi.width - 40, 35)
-                .endFill();
-            kingBar.addChild(Pixi.kingBarRect);
-
             Pixi.kingNameText = new Text("", new TextStyle({
                 fontFamily: "Verdana",
-                fontSize: 15,
+                fontSize: 30,
                 fill: "#fff"
             }));
             Pixi.kingNameText.anchor.set(0.5);
-            Pixi.kingNameText.x = Pixi.kingBarRect.width / 2;
-            Pixi.kingNameText.y = Pixi.kingBarRect.height / 2;
-            kingBar.addChild(Pixi.kingNameText);
-
-            let durationDesc = new Text("Время", new TextStyle({
-                fontFamily: "Verdana",
-                fontSize: 13,
-                fill: "#eee"
-            }));
-            durationDesc.anchor.set(0.5);
-            durationDesc.x = Pixi.kingBarRect.width / 2;
-            durationDesc.y = Pixi.kingBarRect.y - durationDesc.height - 40;
-            kingBar.addChild(durationDesc);
+            Pixi.kingNameText.x = WIDTH / 2;
+            Pixi.kingNameText.y = 840;
+            Pixi.gameScene.addChild(Pixi.kingNameText);
 
             Pixi.kingDuration = new Text("0", new TextStyle({
                 fontFamily: "Verdana",
-                fontSize: 23,
+                fontSize: 24,
                 fill: "#fff"
             }));
             Pixi.kingDuration.anchor.set(0.5);
-            Pixi.kingDuration.x = Pixi.kingBarRect.width / 2;
-            Pixi.kingDuration.y = durationDesc.y + durationDesc.height + 15;
-            kingBar.addChild(Pixi.kingDuration);
+            Pixi.kingDuration.x = WIDTH / 2;
+            Pixi.kingDuration.y = 890;
+            Pixi.gameScene.addChild(Pixi.kingDuration);
 
-            for (let i = 0; i < 3; i++) {
-                let num = i + 1;
-                let font = ((2 - i) * 2) + 10;
-            
+            let leaderBoardTextStyle = new TextStyle({
+                fontFamily: "Verdana",
+                fontSize: 24,
+                fill: "#fff"
+            });
 
-                Pixi.leaderboard[i] = new Text(num + ": -", new TextStyle({
-                    fontFamily: "Verdana",
-                    fontSize: font,
-                    fill: "#000"
-                }));
-                Pixi.leaderboard[i].x = 20;
-                Pixi.leaderboard[i].y = kingBar.y - 150 + (i * (Pixi.leaderboard[i].height + 10));
-                Pixi.gameScene.addChild(Pixi.leaderboard[i]);
+            for (let i = 0; i < 3; i++) {            
+                Pixi.leaderboard[i] = {
+                    name: new Text("-", leaderBoardTextStyle),
+                    score: new Text("0", leaderBoardTextStyle),
+                };
+
+                Pixi.leaderboard[i].name.x = 80;
+                Pixi.leaderboard[i].score.x = WIDTH - (Pixi.leaderboard[i].score.width - 150);
+
+                Pixi.leaderboard[i].name.y = 563 + (i * 57);
+                Pixi.leaderboard[i].score.y = Pixi.leaderboard[i].name.y;
+
+
+                Pixi.gameScene.addChild(Pixi.leaderboard[i].name);
+                Pixi.gameScene.addChild(Pixi.leaderboard[i].score);
             }
 
             // Load another
             // loadMan();
             // loadRays();
-            Pixi.loadTargetBtn(handlerClick);
+            console.log(Pixi.textures);
+            Pixi.loadTargetBtn(Pixi.app.loader.resources['main_btn'].texture, handlerClick);
             // loadPointFlow();
 
             Pixi.app.ticker.add(delta => gameLoop(delta));
@@ -199,16 +179,12 @@ export let Pixi = {
         logo.anchor.set(0, 0);
         Pixi.introScene.addChild(logo);
 
-        logo.scale.x = VIEW_SCALE;
-        logo.scale.y = VIEW_SCALE;
         logo.x = Pixi.width / 2 - logo.width / 2;
         logo.y = Pixi.height / 8;
 
         // Start
         let playGuestBtn = new Sprite(Pixi.textures["play_guest.png"])
         playGuestBtn.anchor.set(0, 0);
-        playGuestBtn.scale.x = VIEW_SCALE;
-        playGuestBtn.scale.y = VIEW_SCALE;
         playGuestBtn.x = Pixi.width / 2 - (playGuestBtn.width / 2);
         playGuestBtn.y = Pixi.height / 1.6;
         playGuestBtn.interactive = true;
@@ -238,64 +214,75 @@ export let Pixi = {
             }
         }, 500);
     },
-    loadTargetBtn: function (handlerClick) {
-        // Target Button
-        Pixi.originalBtnTexture = new Sprite(Pixi.textures["btn.png"])
+    loadTargetBtn: function (texture, handlerClick) {
+        Pixi.targetBtn = new TilingSprite(texture, 240, 215);
+        Pixi.targetBtn.position.set(0, 20);
 
-        Pixi.targetBtn = new Sprite(Pixi.textures["btn.png"]);
-        Pixi.targetBtn.anchor.set(0, 0);
-        Pixi.targetBtn.scale.x = VIEW_SCALE;
-        Pixi.targetBtn.scale.y = VIEW_SCALE;
-        Pixi.targetBtn.x = Pixi.width / 2 - (Pixi.targetBtn.width / 2);
-        Pixi.targetBtn.y = Pixi.height - Pixi.targetBtn.height - (Pixi.height / 16);
+        Pixi.targetBtn.x = WIDTH / 2 - (Pixi.targetBtn.width / 2);
+        Pixi.targetBtn.y = HEIGHT - (Pixi.targetBtn.height) - 50;
         Pixi.targetBtn.interactive = true;
         Pixi.targetBtn.buttonMode = true;
         Pixi.targetBtn.on("pointerdown", handlerClick);
-
         Pixi.gameScene.addChild(Pixi.targetBtn);
-
-        Pixi.targetBtnPressed = new Sprite(Pixi.textures["btn_pressed.png"]);
     },
-    loadGameScene: function (User) {
+    toggleBtnState: function(press) {
+        if (press) {
+            Pixi.targetBtn.tilePosition.y = 215
+        } else {
+            Pixi.targetBtn.tilePosition.y = 0;
+        }
+    },
+    showGameScene: function (User) {
         Pixi.introScene.visible = false;
         Pixi.gameScene.visible = true;
 
-        Pixi.score.text = User.name;
-        Pixi.score.x = 10
+        Pixi.username.text = User.name;
+        Pixi.username.x = 100;
     },
     changeKing: function(king, isYourself) {
         let text = king.user.name;
 
         if (isYourself) {
-            text = ">> " + text + " <<";
+            text = "| Ты – Царь горы |";
             Pixi.kingNameText.style.fill = "#edd100";
         } else {
             Pixi.kingNameText.style.fill = "#fff";
         }
 
         Pixi.kingNameText.text = text;
-        Pixi.kingNameText.x = Pixi.kingBarRect.width / 2;
-        Pixi.kingNameText.y = Pixi.kingBarRect.height / 2;
+        Pixi.kingNameText.x = WIDTH / 2;
 
         Pixi.updateKingDuration(king.duration);
     },
     updateKingDuration: function(duration) {
         Pixi.kingDuration.text = Math.max(0, duration);
-        Pixi.kingDuration.x = Pixi.kingBarRect.width / 2;
+        Pixi.kingDuration.x = WIDTH / 2;
+    },
+    getFormatedDuration: function(duration) {
+        if (duration < 1000) {
+            return duration;
+        }
+
+        return (Math.floor((duration / 1000) * 10) / 10) + ' K';
     },
     updateUserDuration: function(duration) {
-        Pixi.duration.text = duration;
-        Pixi.duration.x = Pixi.gameScene.width - Pixi.duration.width - 30;
+        Pixi.userScore.text = Pixi.getFormatedDuration(duration);
+        Pixi.userScore.x = WIDTH - Pixi.userScore.width - 100;
     },
     changeLeaderBoard: function(leaderboard) {
+        if (null == leaderboard) {
+            console.warn('leaderboard is null');
+            return;
+        }
+
         for (let i = 0; i < 3; i++) {
             if (typeof leaderboard[i] === 'undefined') {
                 continue;
             }
 
-            let num = i + 1;
-
-            Pixi.leaderboard[i].text = leaderboard[i].duration + ": " + leaderboard[i].name;
+            Pixi.leaderboard[i].name.text = leaderboard[i].name;
+            Pixi.leaderboard[i].score.text = Pixi.getFormatedDuration(leaderboard[i].duration);
+            Pixi.leaderboard[i].score.x = WIDTH - Pixi.leaderboard[i].score.width - 80;
         }
-    }
+    },
 };

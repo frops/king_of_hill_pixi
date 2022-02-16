@@ -60,7 +60,7 @@ export let Game = {
             return;
         }
 
-        Game.pixi.loadGameScene(Game.user);
+        Game.pixi.showGameScene(Game.user);
         Game.server.info(Game.user, function(resp) {
             Game.setKingFromResp(resp.king);
             Game.pixi.changeLeaderBoard(resp.leaderboard);
@@ -86,7 +86,7 @@ export let Game = {
             Game.buttonClick = false;
             Game.timerClick = 10;
 
-            Game.pixi.targetBtn.texture = Game.pixi.targetBtnPressed.texture;
+            Game.pixi.toggleBtnState(true);
             // resetPointFlow(e, damage)
 
             Game.server.click(Game.user, function(resp) {
@@ -104,7 +104,7 @@ export let Game = {
     playState: function (delta) {
         if (Game.timerClick == 0) {
             Game.buttonClick = true;
-            Game.pixi.targetBtn.texture = Game.pixi.originalBtnTexture.texture;
+            Game.pixi.toggleBtnState(false);
         } else if (Game.timerClick > 0) {
             Game.timerClick--;
         }
@@ -120,7 +120,6 @@ export let Game = {
         Game.pixi.changeLeaderBoard(msg.leaderboard);
     },
     changeKing: function() {
-        console.log(Game.server.time + " - " + Game.king.boardedAt, 'll');
         Game.king.duration = parseInt((Game.server.time - Game.king.boardedAt) / 1000);
         let isYourself = Game.king.user.uuid === Game.user.uuid;
         Game.pixi.changeKing(Game.king, isYourself);
