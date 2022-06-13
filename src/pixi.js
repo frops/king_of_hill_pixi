@@ -57,7 +57,8 @@ export let Pixi = {
         Pixi.app.loader
             .add(RESOURCE_PATH)
             .add('main_btn', 'img/main_btn.png')
-            .add('back_game', 'img/back_game.jpg');
+            .add('back_game', 'img/back_game.jpg')
+            .add('char_game', 'img/secretary.png');
 
         Pixi.app.loader.load(() => {
             Pixi.textures = Pixi.app.loader.resources[RESOURCE_PATH].textures;
@@ -73,6 +74,7 @@ export let Pixi = {
             bg.height = Pixi.height;
             bg.anchor.set(0, 0);
             Pixi.gameScene.addChild(bg);
+
 
             // Scorebar
             let scoreBar = new Container();
@@ -169,10 +171,19 @@ export let Pixi = {
         Pixi.introScene = new Container();
         Pixi.app.stage.addChild(Pixi.introScene);
 
+        
+
         // Background
         let bgStart = new Sprite(Pixi.textures["back_start.png"]);
         bgStart.anchor.set(0, 0);
         Pixi.introScene.addChild(bgStart);
+
+        let ch = new Sprite(Pixi.app.loader.resources['char_game'].texture);
+        ch.x = -450;
+        ch.y = 0;
+        ch.anchor.set(0, 0);
+        Pixi.introScene.addChild(ch);
+
 
         // Auth Google
         let authBtn = new Graphics();
@@ -186,6 +197,8 @@ export let Pixi = {
         authBtn.on("pointerdown", loginGoogle);
 
         Pixi.introScene.addChild(authBtn);
+
+
         let authBtnText = new Text("Login via Google", new TextStyle({
             fontFamily: "Verdana",
             fontSize: 19,
@@ -227,6 +240,25 @@ export let Pixi = {
         Pixi.introNameText.x = Pixi.width / 2;
         Pixi.introNameText.y = playGuestBtn.y + playGuestBtn.height + Pixi.introNameText.height + 10;
         Pixi.introScene.addChild(Pixi.introNameText);
+
+
+        let authBut = new Graphics();
+        authBut.beginFill(0x336699)
+            .drawRect(0, 0, 150, 70)
+            .endFill()
+            .position.set(170, 470);
+
+            Pixi.introScene.addChild(authBut);
+
+        let authButText = new Text("Lookman", new TextStyle({
+            fontFamily: "Times New Roman",
+            fontSize: 26,
+            fill: "#fff"
+        }));
+        authButText.anchor.set(0.5);
+        authButText.x = 250;
+        authButText.y = 500;
+        Pixi.introScene.addChild(authButText)
     },
     showIntroName: function (name) {
         let timerId = setInterval(function () {
