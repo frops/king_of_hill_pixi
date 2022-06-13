@@ -169,10 +169,15 @@ export let Pixi = {
         Pixi.introScene = new Container();
         Pixi.app.stage.addChild(Pixi.introScene);
 
+        
+
         // Background
         let bgStart = new Sprite(Pixi.textures["back_start.png"]);
         bgStart.anchor.set(0, 0);
         Pixi.introScene.addChild(bgStart);
+
+
+
 
         // Auth Google
         let authBtn = new Graphics();
@@ -186,7 +191,9 @@ export let Pixi = {
         authBtn.on("pointerdown", loginGoogle);
 
         Pixi.introScene.addChild(authBtn);
-        let authBtnText = new Text("Login via Google", new TextStyle({
+
+
+        let authBtnText = new Text("Login via MADRID", new TextStyle({
             fontFamily: "Verdana",
             fontSize: 19,
             fill: "#fff"
@@ -227,6 +234,16 @@ export let Pixi = {
         Pixi.introNameText.x = Pixi.width / 2;
         Pixi.introNameText.y = playGuestBtn.y + playGuestBtn.height + Pixi.introNameText.height + 10;
         Pixi.introScene.addChild(Pixi.introNameText);
+
+        let authButText = new Text("Lookman", new TextStyle({
+            fontFamily: "Times New Roman",
+            fontSize: 26,
+            fill: "#fff"
+        }));
+        authButText.anchor.set(0.5);
+        authButText.x = 50;
+        authButText.y = 50;
+        Pixi.introScene.addChild(authButText)
     },
     showIntroName: function (name) {
         let timerId = setInterval(function () {
