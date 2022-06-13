@@ -18,15 +18,14 @@ if (window.location.hostname == "bakla.games") {
 Pixi.init(IS_DEV);
 
 // Load server info
-Server.init(BackendURL, centrifugoHost, Game.setKingFromWs);
-Server.load();
+Server.init(BackendURL, centrifugoHost, Game.setKingFromWs).load(function(server) {
+    // Init Game
+    Game.init(server, Pixi);
+    Game.loadUser();
 
-// Init Game
-Game.init(Server, Pixi);
-Game.loadUser();
+    // Show loading text
+    Pixi.showLoading();
 
-// Show loading text
-Pixi.showLoading();
-
-// Loader
-Pixi.load(Game.playGuest, Game.handlerClick, Game.gameLoop);
+    // Loader
+    Pixi.load(Game.playGuest, Game.handlerClick, Game.gameLoop, Server.getGoogleLink);
+});

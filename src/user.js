@@ -20,8 +20,6 @@ export let User = {
             return null;
         }
 
-        console.log(jwt, "jwt is");
-
         User.isLoaded = true;
         User.uuid = jwt.uuid;
         User.name = jwt.name;

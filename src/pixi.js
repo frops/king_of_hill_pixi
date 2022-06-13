@@ -53,7 +53,7 @@ export let Pixi = {
         });
         document.querySelector('.container').appendChild(Pixi.app.view);
     },
-    load: function (playGuest, handlerClick, gameLoop) {
+    load: function (playGuest, handlerClick, gameLoop, loginGoogle) {
         Pixi.app.loader
             .add(RESOURCE_PATH)
             .add('main_btn', 'img/main_btn.png')
@@ -61,7 +61,7 @@ export let Pixi = {
 
         Pixi.app.loader.load(() => {
             Pixi.textures = Pixi.app.loader.resources[RESOURCE_PATH].textures;
-            Pixi.showIntroScene(playGuest);
+            Pixi.showIntroScene(playGuest, loginGoogle);
 
             Pixi.gameScene = new Container();
             Pixi.gameScene.visible = false;
@@ -165,7 +165,7 @@ export let Pixi = {
         loadingText.anchor.set(0.5);
         loadingText.position.set(Pixi.width / 2, Pixi.width / 3);
     },
-    showIntroScene: function (playGuest) {
+    showIntroScene: function (playGuest, loginGoogle) {
         Pixi.introScene = new Container();
         Pixi.app.stage.addChild(Pixi.introScene);
 
@@ -173,6 +173,28 @@ export let Pixi = {
         let bgStart = new Sprite(Pixi.textures["back_start.png"]);
         bgStart.anchor.set(0, 0);
         Pixi.introScene.addChild(bgStart);
+
+        // Auth Google
+        let authBtn = new Graphics();
+        authBtn.beginFill(0x336699)
+            .drawRect(0, 0, 300, 100)
+            .endFill()
+            .position.set(200, Pixi.height - 150);
+
+        authBtn.interactive = true;
+        authBtn.buttonMode = true;
+        authBtn.on("pointerdown", loginGoogle);
+
+        Pixi.introScene.addChild(authBtn);
+        let authBtnText = new Text("Login via Google", new TextStyle({
+            fontFamily: "Verdana",
+            fontSize: 19,
+            fill: "#fff"
+        }));
+        authBtnText.anchor.set(0.5);
+        authBtnText.x = authBtn.x + (authBtn.width / 2);
+        authBtnText.y = authBtn.y + authBtn.height / 2;
+        Pixi.introScene.addChild(authBtnText);
 
         // Logo
         let logo = new Sprite(Pixi.textures["logo.png"]);
@@ -233,11 +255,16 @@ export let Pixi = {
         }
     },
     showGameScene: function (User) {
-        Pixi.introScene.visible = false;
-        Pixi.gameScene.visible = true;
+        
+            if (Pixi.gameScene) {
+                Pixi.introScene.visible = false;
+                Pixi.gameScene.visible = true;
 
-        Pixi.username.text = User.name;
-        Pixi.username.x = 100;
+                Pixi.username.text = User.name;
+                Pixi.username.x = 100;
+            
+            }
+        
     },
     changeKing: function(king, isYourself) {
         let text = king.user.name;
@@ -255,7 +282,12 @@ export let Pixi = {
         Pixi.updateKingDuration(king.duration);
     },
     updateKingDuration: function(duration) {
-        Pixi.kingDuration.text = Math.max(0, duration);
+        if (duration < 0) {
+            Pixi.kingDuration.text = "-";
+        } else {
+            Pixi.kingDuration.text = duration;
+        }
+
         Pixi.kingDuration.x = WIDTH / 2;
     },
     getFormatedDuration: function(duration) {

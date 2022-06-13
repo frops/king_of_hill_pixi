@@ -11,11 +11,16 @@ export let Game = {
     buttonClick: true,
     everySecTimer: null,
     king: {
-        user: null,
+        user: {duration: 0, name: "-", uuid:""},
         boardedAt: null,
         duration: null,
     },
     init: function (Server, Pixi) {
+        if (!Server.isLoaded) {
+            console.error('server not loaded yet');
+            return
+        }
+
         Game.server = Server;
         Game.pixi = Pixi;
 
@@ -29,13 +34,23 @@ export let Game = {
                 Game.pixi.updateKingDuration(Game.king.duration);
             }
         }, 1000);
-
-        if (!Game.server.isLoaded) {
-            console.warn('server not loaded yet');
-            return
-        }
+    },
+    authGoogleUser: function() {
+            let code = Game.server.googleCallback.code;
+            let scope = Game.server.googleCallback.scope;
+            
+            axios.get(Server.backendURL + `/v1/auth/google?code=${code}&scope=${scope}`)
+            .then(function (resp) {
+                Game.setKingFromResp(resp.king);
+                Game.pixi.changeLeaderBoard(resp.leaderboard);
+                Game.pixi.updateUserDuration(resp.user_info.duration);
+            }).catch(function (err) {
+                console.error(err);
+            });
     },
     loadUser: function () {
+        console.log('loading user..');
+
         // getting JWT from cookie
         Game.user = User.loadByJwt(helpers.getCookieData('jwt'));
 
@@ -44,15 +59,24 @@ export let Game = {
             return;
         }
 
-        // if local user not found, then we try to create guest
-        Game.server.createGuest(function (token) { // Create new guest user
-            Game.user = User.loadByJwt(token);
-            Game.pixi.showIntroName(Game.user.name);
-            return;
-        }, function (err) {
-            console.err("failed to create guest" + err);
-            return;
-        });
+        Game.server.googleCallback.init();
+        if (Game.server.googleCallback.isNeedRequest()) {
+            Game.server.authGoogleUser(Game.server.googleCallback.code, Game.server.googleCallback.scope, function(resp) {
+                Game.user = User.loadByJwt(resp.data.data.token);
+                Game.pixi.showIntroName(Game.user.name);
+            });
+        } else {
+            // if local user not found, then we try to create guest
+            
+            // Game.server.createGuest(function (token) { // Create new guest user
+            //     Game.user = User.loadByJwt(token);
+            //     Game.pixi.showIntroName(Game.user.name);
+            //     return;
+            // }, function (err) {
+            //     console.err("failed to create guest" + err);
+            //     return;
+            // });
+        }
     },
     playGuest: function (e) {
         if (!Game.user.isLoaded) {
@@ -120,6 +144,10 @@ export let Game = {
         Game.pixi.changeLeaderBoard(msg.leaderboard);
     },
     changeKing: function() {
+        if (!Game.king.user) {
+            return;
+        }
+
         Game.king.duration = parseInt((Game.server.time - Game.king.boardedAt) / 1000);
         let isYourself = Game.king.user.uuid === Game.user.uuid;
         Game.pixi.changeKing(Game.king, isYourself);

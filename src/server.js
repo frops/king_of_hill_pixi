@@ -6,12 +6,16 @@ export let Server = {
     backendURL: "",
     centrifugoHost: "",
     setKingFromWs: null,
+    googleCallback: null,
     init: function (BackendURL, CentrifugoHost, setKingFromWs) {
         Server.backendURL = BackendURL;
         Server.centrifugoHost = CentrifugoHost;
         Server.setKingFromWs = setKingFromWs;
+
+        return Server;
     },
-    load: function () {
+    load: function (callback) {
+        // Get main info/settings from server
         axios.get(Server.backendURL + '/v1/info')
             .then(function (response) {
                 let raw = response.data.data;
@@ -20,11 +24,15 @@ export let Server = {
                 Server.version = raw.version;
                 Server.isLoaded = true;
                 Server.wsInit();
-                console.log(Server, 'SERVER INFO loaded');
+                Server.initGoogleCallback();
+
+                callback(Server);
             }).catch(function (error) {
-                console.error(error);
+                console.error(error, 'server info');
             });
     },
+
+    // Get user info
     info: function(user, success, error) {
         axios.request({
             url: Server.backendURL + '/v1/game/info',
@@ -37,6 +45,8 @@ export let Server = {
             console.error(err);
         });
     },
+
+    // Click request to server
     click: function(user, success, error) {
         axios.request({
             url: Server.backendURL + '/v1/game/click',
@@ -47,6 +57,15 @@ export let Server = {
             success(response);
         }).catch(function (err) {
             error(err);
+        });
+    },
+    authGoogleUser: function(code, scope, success) {        
+        axios.get(Server.backendURL + `/v1/auth/google?code=${code}&scope=${scope}`)
+        .then(function (resp) {
+            success(resp);
+        })
+        .catch(function (err) {
+            console.error(err);
         });
     },
     createGuest: function (success, error) {
@@ -81,5 +100,44 @@ export let Server = {
         });
 
         centrifuge.connect();
+    },
+
+    initGoogleCallback: function() {
+        // Check Google callback
+        Server.googleCallback = {
+            code: null,
+            scope: null,
+            init: function() {
+                let url = new URL(window.location.href);
+                Server.googleCallback.code = url.searchParams.get("code");
+                Server.googleCallback.scope = url.searchParams.get("scope");
+            },
+            isNeedRequest: function() {
+                return Server.googleCallback.code != null && Server.googleCallback.scope != null;
+            }
+        };
+    },
+
+    //Auth
+    getGoogleLink: function() {
+        let scope = encodeURIComponent('https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
+        let clientId = '420026011536-opg41dihbickgolvjvjbqc6bjsutekat.apps.googleusercontent.com';
+        let redirectUri = encodeURIComponent('https://tolocalhost.com');//encodeURIComponent('https://bakla.games/auth/google/callback');
+        let state = makeid(16);
+        let authURL = `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${redirectUri}` + 
+        `&prompt=consent&state=${state}&response_type=code&client_id=${clientId}&scope=${scope}&access_type=offline`;
+
+        window.location.href = authURL;
     }
 };
+
+function makeid(length) {
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() * 
+ charactersLength));
+   }
+   return result;
+}
