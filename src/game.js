@@ -5,11 +5,15 @@ import { User } from "./user.js";
 export let Game = {
     server: null,
     user: null,
+    chars: [],
     pixi: null,
     state: null,
     timerClick: 0,
     buttonClick: true,
     everySecTimer: null,
+    chooseChars: [],
+    chosenCharUuid: null,
+    noKing: "",
     king: {
         user: {duration: 0, name: "-", uuid:""},
         boardedAt: null,
@@ -22,6 +26,7 @@ export let Game = {
         }
 
         Game.server = Server;
+        Game.noKing = Server.noKing;
         Game.pixi = Pixi;
 
         Game.everySecTimer = setInterval(function () {
@@ -34,66 +39,81 @@ export let Game = {
                 Game.pixi.updateKingDuration(Game.king.duration);
             }
         }, 1000);
-    },
-    authGoogleUser: function() {
-            let code = Game.server.googleCallback.code;
-            let scope = Game.server.googleCallback.scope;
-            
-            axios.get(Server.backendURL + `/v1/auth/google?code=${code}&scope=${scope}`)
-            .then(function (resp) {
-                Game.setKingFromResp(resp.king);
-                Game.pixi.changeLeaderBoard(resp.leaderboard);
-                Game.pixi.updateUserDuration(resp.user_info.duration);
-            }).catch(function (err) {
-                console.error(err);
-            });
+
+        document.addEventListener('start_contest', function(e) {
+            Game.startContest();
+        });
+
+        document.addEventListener('start_king_time', function(e) {
+            Game.startKingTime(e.detail.data);
+        });
     },
     loadUser: function () {
-        console.log('loading user..');
+        Game.server.googleCallback.init();
+        
+        if (Game.server.googleCallback.isNeedRequest()) {
+            Game.server.authGoogleUser(Game.server.googleCallback.code, Game.server.googleCallback.scope, function(token) {
+                var date = new Date();
+                let expires = date.setDate(date.getDate() + 7 * 86400 * 1000);
+                document.cookie = `jwt=${token}; domain=.kh.loc; path=/; expires=${expires.toString()}`;
+                window.location.href = Game.server.mainURL + "?state=play";
+            });
+        }
 
         // getting JWT from cookie
-        Game.user = User.loadByJwt(helpers.getCookieData('jwt'));
+        Game.user = User.LoadByJwt(helpers.getCookieData('jwt'));
 
         if (Game.user && Game.user.isLoaded) {
             Game.pixi.showIntroName(Game.user.name);
             return;
         }
-
-        Game.server.googleCallback.init();
-        if (Game.server.googleCallback.isNeedRequest()) {
-            Game.server.authGoogleUser(Game.server.googleCallback.code, Game.server.googleCallback.scope, function(resp) {
-                Game.user = User.loadByJwt(resp.data.data.token);
-                Game.pixi.showIntroName(Game.user.name);
-            });
-        } else {
-            // if local user not found, then we try to create guest
-            
-            // Game.server.createGuest(function (token) { // Create new guest user
-            //     Game.user = User.loadByJwt(token);
-            //     Game.pixi.showIntroName(Game.user.name);
-            //     return;
-            // }, function (err) {
-            //     console.err("failed to create guest" + err);
-            //     return;
-            // });
-        }
     },
-    playGuest: function (e) {
+    createGuest: function() {
+        Game.server.createGuest(function(token) {
+            var date = new Date();
+            let expires = date.setDate(date.getDate() + 7 * 86400 * 1000);
+            document.cookie = `jwt=${token}; domain=.kh.loc; path=/; expires=${expires.toString()}`;
+            window.location.href = Game.server.mainURL + "?state=play";
+        });
+    },
+    playHandler: function (e) {
         if (!Game.user.isLoaded) {
             console.error('failed to load user');
             return;
         }
 
-        Game.pixi.showGameScene(Game.user);
         Game.server.info(Game.user, function(resp) {
-            Game.setKingFromResp(resp.king);
-            Game.pixi.changeLeaderBoard(resp.leaderboard);
-            Game.pixi.updateUserDuration(resp.user_info.duration);
+            Game.user.SetChars(resp.user_info.chars);
 
-            console.log(resp, 'game info');
-            console.log(Game.server.time, 'server time');
+            if (Game.user.chars.length == 0) {
+                Game.server.getChooseChars(Game.user, function(chars) {
+                    Game.chooseChars = chars;
+                    Game.pixi.showChooseCharScene(chars, Game.chooseChar, Game.chooseLeftChar, Game.chooseRightChar, Game.chooseCharSubmit);
+                });
+            } else {
+                Game.pixi.showGameScene(Game.user);
+                Game.setKingFromResp(resp.king);
+                // Game.pixi.changeLeaderBoard(resp.leaderboard);
+                // Game.pixi.updateUserDuration(resp.user_info.duration);
+            }
         });
         Game.state = Game.playState;
+    },
+    chooseCharSubmit: function() {
+        Game.server.chooseChar(Game.user, Game.chosenCharUuid, function(resp) {
+            Game.user.SetChars([resp.data.data]);
+            Game.pixi.showGameScene(Game.user);
+        });
+    },
+    chooseChar: function(uuid) {
+        Game.pixi.redrawChooseCharsByUuid(uuid);
+        Game.chosenCharUuid = uuid;
+    },
+    chooseLeftChar: function() {
+        Game.chosenCharUuid = Game.pixi.redrawChooseChars('left');
+    },
+    chooseRightChar: function() {
+        Game.chosenCharUuid = Game.pixi.redrawChooseChars('right');
     },
     setKingFromResp: function(resp) {
         Game.king.boardedAt = new Date(resp.boarded_at).getTime();
@@ -141,15 +161,39 @@ export let Game = {
         Game.king.user.name = msg.name;
         Game.king.user.uuid = msg.uuid;
         Game.changeKing();
-        Game.pixi.changeLeaderBoard(msg.leaderboard);
+        // Game.pixi.changeLeaderBoard(msg.leaderboard);
     },
     changeKing: function() {
         if (!Game.king.user) {
             return;
         }
 
-        Game.king.duration = parseInt((Game.server.time - Game.king.boardedAt) / 1000);
-        let isYourself = Game.king.user.uuid === Game.user.uuid;
-        Game.pixi.changeKing(Game.king, isYourself);
+        // Game.king.duration = 20;//parseInt((Game.server.time - Game.king.boardedAt) / 1000);
+        // let isYourself = Game.king.user.uuid === Game.user.uuid;
+        // Game.pixi.changeKing(Game.king, isYourself);
+    },
+
+    startKingTime: function(data) {
+        if (!data.user) {
+            Game.pixi.noKing.visible = true;
+            return;
+        }
+
+        console.log(data, 'KING TIME');
+        Pixi.kingNameText.text = data.user.name;
+
+        if (data.user.uuid == Game.noKing) {
+            console.log("no king");
+            return;
+        }
+
+        Pixi.changeKing({
+            user: data.user,
+            char: data.char,
+        }, data.user.uuid == Game.user.uuid);
+    },
+
+    startContest: function() {
+        Pixi.contestMode();
     }
 };

@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build",
+			"detail": "webpack --mode development --config webpack.config.dev.js"
+		},
+		{
+			"type": "npm",
+			"script": "run watch",
+			"group": "run",
+			"problemMatcher": [],
+			"label": "npm: run watch",
+			"detail": "webpack --mode development --config webpack.config.dev.js"
+		}
+	]
+}

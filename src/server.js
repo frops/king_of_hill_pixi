@@ -1,13 +1,17 @@
 export let Server = {
+    events: {},
     time: null,
     token: "",
     version: "",
+    noKing: "",
     isLoaded: false,
+    mainURL: "",
     backendURL: "",
     centrifugoHost: "",
     setKingFromWs: null,
     googleCallback: null,
-    init: function (BackendURL, CentrifugoHost, setKingFromWs) {
+    init: function (MainURL, BackendURL, CentrifugoHost, setKingFromWs) {
+        Server.mainURL = MainURL;
         Server.backendURL = BackendURL;
         Server.centrifugoHost = CentrifugoHost;
         Server.setKingFromWs = setKingFromWs;
@@ -22,6 +26,7 @@ export let Server = {
                 Server.time = new Date(raw.time).getTime();
                 Server.token = raw.token;
                 Server.version = raw.version;
+                Server.noKing = raw.no_king;
                 Server.isLoaded = true;
                 Server.wsInit();
                 Server.initGoogleCallback();
@@ -46,12 +51,41 @@ export let Server = {
         });
     },
 
+    // Get choose chars of user
+    getChooseChars: function(user, success) {
+        axios.request({
+            url: Server.backendURL + '/v1/chars/choose',
+            headers: { "Authorization": "Bearer " + user.jwt },
+            withCredentials: true,
+        })
+        .then(function (response) {
+            success(response.data.data);
+        }).catch(function (err) {
+            console.error(err);
+        });
+    },
+
+    // Click request to server
+    chooseChar: function(user, uuid, success, error) {
+        axios.request({
+            url: Server.backendURL + '/v1/chars/choose',
+            method: 'post',
+            headers: {"Authorization": "Bearer " + user.jwt },
+            withCredentials: true,
+            data: 'uuid=' + uuid, 
+        }).then(function (response) {
+            success(response);
+        }).catch(function (err) {
+            console.error(err);
+        });
+    },
+
     // Click request to server
     click: function(user, success, error) {
         axios.request({
             url: Server.backendURL + '/v1/game/click',
             method: 'post',
-            headers: { "Authorization": "Bearer " + user.jwt },
+            headers: {"Authorization": "Bearer " + user.jwt },
             withCredentials: true,
         }).then(function (response) {
             success(response);
@@ -62,7 +96,7 @@ export let Server = {
     authGoogleUser: function(code, scope, success) {        
         axios.get(Server.backendURL + `/v1/auth/google?code=${code}&scope=${scope}`)
         .then(function (resp) {
-            success(resp);
+            success(resp.data.data.token);
         })
         .catch(function (err) {
             console.error(err);
@@ -88,7 +122,7 @@ export let Server = {
         centrifuge.setToken(Server.token);
 
         centrifuge.on('connect', function (ctx) {
-            console.log("connected", ctx);
+            console.debug("connected", ctx);
         });
 
         centrifuge.on('disconnect', function (ctx) {
@@ -97,6 +131,14 @@ export let Server = {
 
         centrifuge.subscribe("hill_click", function (ctx) {
             Server.setKingFromWs(ctx.data);
+        });
+
+        centrifuge.subscribe("start_contest", function (ctx) {
+            document.dispatchEvent(new CustomEvent('start_contest', {detail: ctx}));
+        });
+
+        centrifuge.subscribe("start_king_time", function (ctx) {
+            document.dispatchEvent(new CustomEvent('start_king_time', {detail: ctx}));
         });
 
         centrifuge.connect();

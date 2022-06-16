@@ -1,4 +1,4 @@
-import { Application, Container, Sprite, TilingSprite, Text, TextStyle, Graphics } from "pixi.js";
+import {autoDetectRenderer, Application, Container, Sprite, TilingSprite, Text, TextStyle, Graphics } from "pixi.js";
 import * as helpers from "./helpers.js";
 
 const RESOURCE_PATH = "spritesheet.json";
@@ -17,13 +17,20 @@ export let Pixi = {
     introScene: null,
     loadingScene: null,
     gameScene: null,
+    chooseCharScene: null,
 
     //Text
     introNameText: null,
     kingNameText: null,
     kingDuration: null,
+    kingHillTitle: null,
 
     leaderboard: [],
+
+    //Chars
+    chooseChars: [],
+    chosenChar: null,
+    chosenCharText: "",
 
     //Textures
     originalBtnTexture: null,
@@ -31,6 +38,9 @@ export let Pixi = {
     targetBtnPressed: null,
     score: null,
     duration: null,
+    kingSprite: null,
+    contestLogo: null,
+    noKing: null,
     lines: [],
 
     // Functions
@@ -39,10 +49,10 @@ export let Pixi = {
         Pixi.height = HEIGHT;
         Pixi.isDev = isDev;
 
-        // if (helpers.mobileCheck()) { // if is mobile device
-        //     Pixi.width = 720;
-        //     Pixi.height = 1280;
-        // }
+        if (!helpers.mobileCheck()) { // if is mobile device
+            Pixi.width = WIDTH;
+            Pixi.height = HEIGHT;
+        }
 
         // Pixi Application
         Pixi.app = new Application({
@@ -51,28 +61,50 @@ export let Pixi = {
             antialias: true,
             resolution: window.devicePixelRatio // For good rendering on mobiles
         });
+    
         document.querySelector('.container').appendChild(Pixi.app.view);
     },
-    load: function (playGuest, handlerClick, gameLoop, loginGoogle) {
+    load: function (user, createGuestHandler, playHandler, handlerClick, gameLoop, loginGoogle) {
         Pixi.app.loader
-            .add(RESOURCE_PATH)
-            .add('main_btn', 'img/main_btn.png')
-            .add('back_game', 'img/back_game.jpg');
+            //.add(RESOURCE_PATH)
+            .add('back_intro', 'img/back_intro.jpg')
+            .add('back_game', 'img/back_game.jpg')
+            .add('btn_auth_google', 'img/btn_auth_google.png')
+            .add('btn_auth_guest', 'img/btn_auth_guest.png')
+            .add('start', 'img/start.png')
+            .add('logout', 'img/logout.png')
+            .add('click_btn', 'img/click_btn.png')
+            .add('contest_logo', 'img/contest_logo.png')
+            .add('no_king', 'img/no_king.png')
+            .add('main_btn', 'img/main_btn.png');
 
         Pixi.app.loader.load(() => {
-            Pixi.textures = Pixi.app.loader.resources[RESOURCE_PATH].textures;
-            Pixi.showIntroScene(playGuest, loginGoogle);
+            if (user) {
+                Pixi.showIntroAuthedScene(user, playHandler);
+            } else {
+                Pixi.showIntroScene(createGuestHandler, loginGoogle);
+            }
 
             Pixi.gameScene = new Container();
             Pixi.gameScene.visible = false;
             Pixi.app.stage.addChild(Pixi.gameScene);
 
             // Background
-            let bg = new Sprite(Pixi.app.loader.resources['back_game'].texture);
-            bg.width = Pixi.width;
-            bg.height = Pixi.height;
+            let bg = Pixi.getTextureSprite('back_game');
             bg.anchor.set(0, 0);
             Pixi.gameScene.addChild(bg);
+
+            Pixi.contestLogo = Pixi.getTextureSprite('contest_logo');
+            Pixi.contestLogo.x = 110;
+            Pixi.contestLogo.y = 397;
+            Pixi.contestLogo.visible = false;
+            Pixi.gameScene.addChild(Pixi.contestLogo);
+
+            Pixi.noKing = Pixi.getTextureSprite('no_king');
+            Pixi.noKing.x = 110;
+            Pixi.noKing.y = 363;
+            Pixi.noKing.visible = false;
+            Pixi.gameScene.addChild(Pixi.noKing);
 
             // Scorebar
             let scoreBar = new Container();
@@ -80,11 +112,12 @@ export let Pixi = {
 
             Pixi.username = new Text("", new TextStyle({
                 fontFamily: "Verdana",
-                fontSize: 25,
+                fontSize: 20,
                 fill: "#FFDC5F"
             }));
-            Pixi.username.x = 0;
-            Pixi.username.y = 45;
+            Pixi.username.anchor.set(0, 0);
+            Pixi.username.x = 176;
+            Pixi.username.y = 39;
             scoreBar.addChild(Pixi.username);
 
             Pixi.userScore = new Text("", new TextStyle({
@@ -99,15 +132,18 @@ export let Pixi = {
             // Current user
             Pixi.kingNameText = new Text("", new TextStyle({
                 fontFamily: "Verdana",
-                fontSize: 30,
-                fill: "#fff"
+                fontSize: 38,
+                fill: "#1A5D7A"
             }));
-            Pixi.kingNameText.anchor.set(0.5);
-            Pixi.kingNameText.x = WIDTH / 2;
+            Pixi.kingNameText.x = Pixi.getCenterX(Pixi.kingNameText);
             Pixi.kingNameText.y = 840;
             Pixi.gameScene.addChild(Pixi.kingNameText);
 
-            Pixi.kingDuration = new Text("0", new TextStyle({
+            Pixi.kingHillTitle = Pixi.getTextObject("Царь горы", "24pt", "#0E4C67", "center", 300);
+            Pixi.kingHillTitle.visible = false;
+            Pixi.gameScene.addChild(Pixi.kingHillTitle);
+
+            Pixi.kingDuration = new Text("", new TextStyle({
                 fontFamily: "Verdana",
                 fontSize: 24,
                 fill: "#fff"
@@ -117,38 +153,13 @@ export let Pixi = {
             Pixi.kingDuration.y = 890;
             Pixi.gameScene.addChild(Pixi.kingDuration);
 
-            let leaderBoardTextStyle = new TextStyle({
-                fontFamily: "Verdana",
-                fontSize: 24,
-                fill: "#fff"
-            });
-
-            for (let i = 0; i < 3; i++) {            
-                Pixi.leaderboard[i] = {
-                    name: new Text("-", leaderBoardTextStyle),
-                    score: new Text("0", leaderBoardTextStyle),
-                };
-
-                Pixi.leaderboard[i].name.x = 80;
-                Pixi.leaderboard[i].score.x = WIDTH - (Pixi.leaderboard[i].score.width - 150);
-
-                Pixi.leaderboard[i].name.y = 563 + (i * 57);
-                Pixi.leaderboard[i].score.y = Pixi.leaderboard[i].name.y;
-
-
-                Pixi.gameScene.addChild(Pixi.leaderboard[i].name);
-                Pixi.gameScene.addChild(Pixi.leaderboard[i].score);
-            }
-
             // Load another
             // loadMan();
             // loadRays();
-            console.log(Pixi.textures);
-            Pixi.loadTargetBtn(Pixi.app.loader.resources['main_btn'].texture, handlerClick);
+            Pixi.loadTargetBtn(handlerClick);
             // loadPointFlow();
 
             Pixi.app.ticker.add(delta => gameLoop(delta));
-
             Pixi.loadingScene.visible = false;
         });
     },
@@ -165,68 +176,221 @@ export let Pixi = {
         loadingText.anchor.set(0.5);
         loadingText.position.set(Pixi.width / 2, Pixi.width / 3);
     },
-    showIntroScene: function (playGuest, loginGoogle) {
+    drawChooseButton: function(pressChooseBtnHandler) {
+        let chooseBtn = Pixi.getTextureSprite("btn_submit");
+        chooseBtn.interactive = true;
+        chooseBtn.buttonMode = true;
+        chooseBtn.on("pointerdown", pressChooseBtnHandler);
+        chooseBtn.x = 282;
+        chooseBtn.y = 942;
+        Pixi.chooseCharScene.addChild(chooseBtn);
+    },
+    showChooseCharScene: function (chars, pressCharHandler, pressLeftHandler, pressRightHandler, pressChooseBtnHandler) {
+        Pixi.chooseCharScene = new Container();
+        Pixi.app.stage.addChild(Pixi.chooseCharScene);
+
+        // Textures which should be loaded
+        let textures = [];
+
+        // Background
+        let bg = Pixi.getTextureSprite('back_game');
+        bg.anchor.set(0, 0);
+        Pixi.chooseCharScene.addChild(bg);
+
+        // Text choose char
+        Pixi.chooseCharScene.addChild(
+            Pixi.getTextObject("Выберите персонажа", '18pt', "#fff", "center", 50)
+        );
+
+        // Texture Button
+        textures.push({name: 'btn_submit', path: 'img/btn_submit.png'});
+        textures.push({name: 'btn_left', path: 'img/btn_left.png'});
+        textures.push({name: 'btn_right', path: 'img/btn_right.png'});
+
+        // Textures for 3 chars
+        for (let i = 0; i < 3; i++) {
+            textures.push({name: chars[i].uuid, path: 'chars/' + chars[i].uuid + '.png'})
+        }
+
+        Pixi.loadTextures(textures, function() {
+            // Choose Button
+            Pixi.drawChooseButton(pressChooseBtnHandler);
+
+            let leftBtn = Pixi.getInteractiveSprite("btn_left", 129, 975, pressLeftHandler);
+            let rightBtn = Pixi.getInteractiveSprite("btn_right", 539, 975, pressRightHandler);
+            Pixi.chooseCharScene.addChild(leftBtn);
+            Pixi.chooseCharScene.addChild(rightBtn);
+
+            for (let i = 0; i < 3; i++) {
+                let chooseCharSprite = new Sprite(Pixi.app.loader.resources[chars[i].uuid].texture);
+
+                Pixi.chooseChars[i] = {
+                    uuid: chars[i].uuid,
+                    sprite: chooseCharSprite,
+                    name: chars[i].name,
+                }
+
+                Pixi.chooseChars[i].sprite.interactive = true;
+                Pixi.chooseChars[i].sprite.buttonMode = true;
+                Pixi.chooseChars[i].sprite.on("pointerdown", function() {
+                    pressCharHandler(chars[i].uuid)
+                });
+                Pixi.chooseChars[i].sprite.anchor.set(0, 0);            
+                Pixi.chooseCharScene.addChild(Pixi.chooseChars[i].sprite);
+            }
+
+            Pixi.chosenChar = Pixi.chooseChars[1];
+
+            Pixi.chosenCharText = Pixi.getTextObject(Pixi.chosenChar.name, "24pt", "#fff", "center", 800);
+            Pixi.chooseCharScene.addChild(Pixi.chosenCharText);
+
+            Pixi.redrawChooseChars(1);
+            pressCharHandler(Pixi.chooseChars[1].uuid);
+            Pixi.introScene.visible = false;
+            Pixi.chooseCharScene.visible = true;
+        });
+    },
+    redrawChooseCharsByUuid: function(uuid) {
+        let move = 'no';
+
+        for (let i = 0; i < 3; i++) {
+            if (i != 1 && Pixi.chooseChars[i].uuid == uuid) {
+                if (i == 0) {
+                    move = 'right';
+                } else {
+                    move = 'left';
+                }
+            }
+        }
+
+        Pixi.redrawChooseChars('no');
+    },
+    redrawChooseChars: function(move) {
+        let toggleLeftRight = false;
+        
+        if (move == 'left') {
+            let reserveChar = Pixi.chooseChars[2];
+            Pixi.chooseChars[2] = Pixi.chooseChars[1];
+            Pixi.chooseChars[1] = Pixi.chooseChars[0];
+            Pixi.chooseChars[0] = reserveChar;
+        } else if (move == 'right') {
+            let reserveChar = Pixi.chooseChars[0];
+            Pixi.chooseChars[0] = Pixi.chooseChars[1];
+            Pixi.chooseChars[1] = Pixi.chooseChars[2];
+            Pixi.chooseChars[2] = reserveChar;
+        }
+
+        let name = Pixi.chooseChars[1].name;
+        
+        for (let i = 0; i < 3; i++) {
+            if (i == 1) {
+                Pixi.chooseChars[i].sprite.x = 240;
+                Pixi.chooseChars[i].sprite.y = 304;
+                Pixi.chooseChars[i].sprite.width = 240;
+                Pixi.chooseChars[i].sprite.height = 457;
+            } else {
+                Pixi.chooseChars[i].sprite.x = 89;
+                Pixi.chooseChars[i].sprite.y = 390;
+                Pixi.chooseChars[i].sprite.width = 150;
+                Pixi.chooseChars[i].sprite.height = 286;
+
+                if (!toggleLeftRight) {
+                    Pixi.chooseChars[i].sprite.x = 479;
+                    toggleLeftRight = true;
+                }
+            }
+        }
+
+        Pixi.chosenCharText.text = name;
+        Pixi.chosenCharText.x = (Pixi.width / 2) - (Pixi.chosenCharText.width / 2);
+
+        return Pixi.chooseChars[1].uuid;
+    },
+    showIntroScene: function (createGuestHandler, loginGoogleHandler) {
         Pixi.introScene = new Container();
         Pixi.app.stage.addChild(Pixi.introScene);
 
         // Background
-        let bgStart = new Sprite(Pixi.textures["back_start.png"]);
-        bgStart.anchor.set(0, 0);
-        Pixi.introScene.addChild(bgStart);
+        let bg = Pixi.getTextureSprite('back_intro');
+        bg.anchor.set(0, 0);
+        Pixi.introScene.addChild(bg);
 
-        // Auth Google
-        let authBtn = new Graphics();
-        authBtn.beginFill(0x336699)
-            .drawRect(0, 0, 300, 100)
-            .endFill()
-            .position.set(200, Pixi.height - 150);
-
+        // Auth Google Button
+        let authBtn = Pixi.getTextureSprite('btn_auth_google');
+        authBtn.position.set(110, 930);
         authBtn.interactive = true;
         authBtn.buttonMode = true;
-        authBtn.on("pointerdown", loginGoogle);
-
+        authBtn.on("pointerdown", loginGoogleHandler);
         Pixi.introScene.addChild(authBtn);
-        let authBtnText = new Text("Login via Google", new TextStyle({
-            fontFamily: "Verdana",
-            fontSize: 19,
-            fill: "#fff"
-        }));
-        authBtnText.anchor.set(0.5);
-        authBtnText.x = authBtn.x + (authBtn.width / 2);
-        authBtnText.y = authBtn.y + authBtn.height / 2;
-        Pixi.introScene.addChild(authBtnText);
 
-        // Logo
-        let logo = new Sprite(Pixi.textures["logo.png"]);
-        logo.anchor.set(0, 0);
-        Pixi.introScene.addChild(logo);
-
-        logo.x = Pixi.width / 2 - logo.width / 2;
-        logo.y = Pixi.height / 8;
-
-        // Start
-        let playGuestBtn = new Sprite(Pixi.textures["play_guest.png"])
+        // Auth Guest Button
+        let playGuestBtn = Pixi.getTextureSprite('btn_auth_guest');
         playGuestBtn.anchor.set(0, 0);
-        playGuestBtn.x = Pixi.width / 2 - (playGuestBtn.width / 2);
-        playGuestBtn.y = Pixi.height / 1.6;
+        playGuestBtn.position.set(110, 750);
         playGuestBtn.interactive = true;
         playGuestBtn.buttonMode = true;
-        playGuestBtn.on("pointerdown", playGuest);
+        playGuestBtn.on("pointerdown", createGuestHandler);
         Pixi.introScene.addChild(playGuestBtn);
+    },
+    showIntroAuthedScene: function(user, playGameHandler) {
+        Pixi.introScene = new Container();
+        Pixi.app.stage.addChild(Pixi.introScene);
 
-        // Intro name, below play guest btn
-        Pixi.introNameText = new Text("", new TextStyle({
+        // Background
+        let bg = Pixi.getTextureSprite('back_intro');
+        bg.anchor.set(0, 0);
+        Pixi.introScene.addChild(bg);
+
+        // Current user
+        let userNameText = new Text(user.name, new TextStyle({
             fontFamily: "Verdana",
-            fontSize: 15,
-            fill: "#fff",
-            dropShadow: true,
-            dropShadowBlur: 0.2,
-            dropShadowDistance: 1,
+            fontSize: 30,
+            fill: "#fff"
         }));
-        Pixi.introNameText.anchor.set(0.5);
-        Pixi.introNameText.x = Pixi.width / 2;
-        Pixi.introNameText.y = playGuestBtn.y + playGuestBtn.height + Pixi.introNameText.height + 10;
-        Pixi.introScene.addChild(Pixi.introNameText);
+        userNameText.anchor.set(0.5);
+        userNameText.position.set((Pixi.width / 2), 589);
+        Pixi.introScene.addChild(userNameText);
+
+        // Start Button
+        let startBtn = Pixi.getTextureSprite('start');
+        startBtn.position.set(110, 930);
+        startBtn.interactive = true;
+        startBtn.buttonMode = true;
+        startBtn.on("pointerdown", playGameHandler);
+        Pixi.introScene.addChild(startBtn);
+        
+        // Start Button
+        let logoutBtn = Pixi.getTextureSprite('logout');
+        logoutBtn.position.set(230, 1178);
+        // startBtn.interactive = true;
+        // startBtn.buttonMode = true;
+        // startBtn.on("pointerdown", playGameHandler);
+        Pixi.introScene.addChild(logoutBtn);   
+    },
+    showGameScene: function (User) {
+        let currentChar = User.GetChosenChar();
+        console.log(User, 'current user ');
+        let chosenCharTextureName = 'char_' + currentChar.char.uuid;
+        let chosenCharTexturePath = 'chars/' + currentChar.char.uuid + '.png';
+        let textures = [{name: chosenCharTextureName, path: chosenCharTexturePath}];
+
+        Pixi.loadTextures(textures, function() {
+            let chosenCharSprite = Pixi.getTextureSprite(chosenCharTextureName);
+            chosenCharSprite.position.set(97, 17);
+            chosenCharSprite.width = 47;
+            chosenCharSprite.height = 101;
+            Pixi.gameScene.addChild(chosenCharSprite);
+
+            Pixi.introScene.visible = false;
+            Pixi.gameScene.visible = true;
+
+            if (Pixi.chooseCharScene) {
+                Pixi.chooseCharScene.visible = false;
+            }
+
+            let names = User.name.split(" ");
+            Pixi.username.text = names[0] + "\n" + names[1];
+        });
     },
     showIntroName: function (name) {
         let timerId = setInterval(function () {
@@ -236,50 +400,53 @@ export let Pixi = {
             }
         }, 500);
     },
-    loadTargetBtn: function (texture, handlerClick) {
-        Pixi.targetBtn = new TilingSprite(texture, 230, 235);
+    loadTargetBtn: function (handlerClick) {
+        //Pixi.targetBtn = new TilingSprite(texture, 230, 235);
+        Pixi.targetBtn = Pixi.getTextureSprite('click_btn');
         Pixi.targetBtn.position.set(0, 0);
 
-        Pixi.targetBtn.x = WIDTH / 2 - (Pixi.targetBtn.width / 2);
-        Pixi.targetBtn.y = HEIGHT - (Pixi.targetBtn.height) - 50;
+        Pixi.targetBtn.position.set(245, 951);
         Pixi.targetBtn.interactive = true;
         Pixi.targetBtn.buttonMode = true;
         Pixi.targetBtn.on("pointerdown", handlerClick);
         Pixi.gameScene.addChild(Pixi.targetBtn);
     },
     toggleBtnState: function(press) {
-        if (press) {
-            Pixi.targetBtn.tilePosition.y = 235;
-        } else {
-            Pixi.targetBtn.tilePosition.y = 0;
-        }
+        // if (press) {
+        //     Pixi.targetBtn.tilePosition.y = 235;
+        // } else {
+        //     Pixi.targetBtn.tilePosition.y = 0;
+        // }
     },
-    showGameScene: function (User) {
-        
-            if (Pixi.gameScene) {
-                Pixi.introScene.visible = false;
-                Pixi.gameScene.visible = true;
+    contestMode: function() {
+        Pixi.noKing.visible = false;
+        Pixi.kingHillTitle.visible = false;
+        Pixi.contestLogo.visible = true;
 
-                Pixi.username.text = User.name;
-                Pixi.username.x = 100;
-            
-            }
-        
+        if (Pixi.kingSprite) {
+            Pixi.gameScene.removeChild(Pixi.kingSprite);
+            Pixi.kingNameText.text = "";
+            Pixi.kingDuration.text = "";
+        }
     },
     changeKing: function(king, isYourself) {
         let text = king.user.name;
+        let charResourceName = 'char_' + king.char.uuid;
+        Pixi.kingHillTitle.visible = true;
+        Pixi.contestLogo.visible = false;
 
-        if (isYourself) {
-            text = "| Ты – Царь горы |";
-            Pixi.kingNameText.style.fill = "#edd100";
-        } else {
-            Pixi.kingNameText.style.fill = "#fff";
-        }
-
-        Pixi.kingNameText.text = text;
-        Pixi.kingNameText.x = WIDTH / 2;
-
-        Pixi.updateKingDuration(king.duration);
+        Pixi.loadTexture('char_' + king.char.uuid, 'chars/' + king.char.uuid + '.png', function() {
+            Pixi.kingSprite = Pixi.getTextureSprite(charResourceName);
+            Pixi.kingSprite.x = 234;
+            Pixi.kingSprite.y = 331;
+            Pixi.gameScene.addChild(Pixi.kingSprite);
+        
+            Pixi.kingNameText.text = text;
+            Pixi.kingNameText.x = Pixi.getCenterX(Pixi.kingNameText);
+            Pixi.kingNameText.y = 828;
+    
+            Pixi.updateKingDuration(20);
+        });
     },
     updateKingDuration: function(duration) {
         if (duration < 0) {
@@ -317,4 +484,60 @@ export let Pixi = {
             Pixi.leaderboard[i].score.x = WIDTH - Pixi.leaderboard[i].score.width - 80;
         }
     },
+
+    // HELPERS FUNCITONS
+
+    getTextureSprite: function(name) {
+        return new Sprite(Pixi.app.loader.resources[name].texture);
+    },
+    getInteractiveSprite: function(name, x, y, handler) {
+        let btn = Pixi.getTextureSprite(name);
+        btn.interactive = true;
+        btn.buttonMode = true;
+        btn.on("pointerdown", handler);
+        btn.x = x;
+        btn.y = y;
+            
+        return btn;
+    },
+    loadTexture: function(name, path, callback) {
+        let textures = [{name: name, path: path}];
+        Pixi.loadTextures(textures, callback);
+    },
+    loadTextures: function(textures, callback) {
+        let cnt = textures.length;
+        let isNeedLoad = false;
+
+        for (let i = 0; i < cnt; i++) {
+             if(!Pixi.app.loader.resources.hasOwnProperty(textures[i].name)) {
+                Pixi.app.loader.add(textures[i].name, textures[i].path);
+                isNeedLoad = true;
+             }
+        }
+
+        if (isNeedLoad) {
+            Pixi.app.loader.load(() => callback());
+        } else {
+            callback();
+        }
+    },
+    getTextObject: function(name, fontSize, fill, x, y) {
+        let text = new Text(name, new TextStyle({
+            fontFamily: "Verdana",
+            fontSize: fontSize,
+            fill: fill
+        }));
+
+        if (x == 'center') {
+            x = Pixi.getCenterX(text);
+        }
+
+        text.x = x;
+        text.y = y;
+        
+        return text;
+    },
+    getCenterX: function(obj) {
+        return (Pixi.width / 2) - (obj.width / 2);
+    }
 };
