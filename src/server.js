@@ -166,7 +166,7 @@ export let Server = {
     getGoogleLink: function() {
         let scope = encodeURIComponent('https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
         let clientId = '420026011536-opg41dihbickgolvjvjbqc6bjsutekat.apps.googleusercontent.com';
-        let redirectUri = encodeURIComponent('https://tolocalhost.com');//encodeURIComponent('https://bakla.games/auth/google/callback');
+        let redirectUri = encodeURIComponent(Server.mainURL);//encodeURIComponent('https://bakla.games/auth/google/callback');
         let state = makeid(16);
         let authURL = `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${redirectUri}` + 
         `&prompt=consent&state=${state}&response_type=code&client_id=${clientId}&scope=${scope}&access_type=offline`;
