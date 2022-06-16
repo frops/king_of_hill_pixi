@@ -68,7 +68,7 @@ export let Pixi = {
         Pixi.app.loader
             //.add(RESOURCE_PATH)
             .add('back_intro', 'img/back_intro.jpg')
-            .add('back_game', 'img/back_game.jpg')
+            .add('back_game', 'img/back_game2.jpg')
             .add('btn_auth_google', 'img/btn_auth_google.png')
             .add('btn_auth_guest', 'img/btn_auth_guest.png')
             .add('start', 'img/start.png')
