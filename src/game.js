@@ -55,7 +55,7 @@ export let Game = {
             Game.server.authGoogleUser(Game.server.googleCallback.code, Game.server.googleCallback.scope, function(token) {
                 var date = new Date();
                 let expires = date.setDate(date.getDate() + 7 * 86400 * 1000);
-                document.cookie = `jwt=${token}; domain=.kh.loc; path=/; expires=${expires.toString()}`;
+                document.cookie = `jwt=${token}; domain=.${Game.server.domain}; path=/; expires=${expires.toString()}`;
                 window.location.href = Game.server.mainURL + "?state=play";
             });
         }
