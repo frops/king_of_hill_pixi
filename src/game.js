@@ -72,7 +72,7 @@ export let Game = {
         Game.server.createGuest(function(token) {
             var date = new Date();
             let expires = date.setDate(date.getDate() + 7 * 86400 * 1000);
-            document.cookie = `jwt=${token}; domain=.kh.loc; path=/; expires=${expires.toString()}`;
+            document.cookie = `jwt=${token}; domain=.${Game.server.domain}; path=/; expires=${expires.toString()}`;
             window.location.href = Game.server.mainURL + "?state=play";
         });
     },
@@ -146,20 +146,6 @@ export let Game = {
         document.cookie = `jwt=;domain=.${Game.server.domain};path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`;
         window.location.href = Game.server.mainURL;
     },
-    delete_cookie: function(name, path, domain ) {
-        if( Game.get_cookie( name ) ) {
-          document.cookie = name + "=" +
-            ((path) ? ";path="+path:"")+
-            ((domain)?";domain="+domain:"") +
-            ";expires=Thu, 01 Jan 1970 00:00:01 GMT";
-        }
-      },
-      
-    get_cookie: function(name){
-          return document.cookie.split(';').some(c => {
-              return c.trim().startsWith(name + '=');
-          });
-      },
     gameLoop: function (delta) {
         Game.playState(delta);
     },
@@ -192,19 +178,13 @@ export let Game = {
     },
 
     startKingTime: function(data) {
-        if (!data.user) {
+        if (!data.user || data.user.uuid == Game.noKing) {
+            console.log("no king");
             Game.pixi.noKing.visible = true;
             return;
         }
 
-        console.log(data, 'KING TIME');
         Pixi.kingNameText.text = data.user.name;
-
-        if (data.user.uuid == Game.noKing) {
-            console.log("no king");
-            return;
-        }
-
         Pixi.changeKing({
             user: data.user,
             char: data.char,
