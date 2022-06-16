@@ -6,12 +6,14 @@ export let Server = {
     noKing: "",
     isLoaded: false,
     mainURL: "",
+    domain: "",
     backendURL: "",
     centrifugoHost: "",
     setKingFromWs: null,
     googleCallback: null,
-    init: function (MainURL, BackendURL, CentrifugoHost, setKingFromWs) {
+    init: function (MainURL, Domain, BackendURL, CentrifugoHost, setKingFromWs) {
         Server.mainURL = MainURL;
+        Server.domain = Domain;
         Server.backendURL = BackendURL;
         Server.centrifugoHost = CentrifugoHost;
         Server.setKingFromWs = setKingFromWs;

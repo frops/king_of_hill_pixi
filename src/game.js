@@ -142,6 +142,24 @@ export let Game = {
     clickHandler: function (data) {
         Game.changeKing(data);
     },
+    logoutHanlder: function() {
+        document.cookie = `jwt=;domain=.${Game.server.domain};path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`;
+        window.location.href = Game.server.mainURL;
+    },
+    delete_cookie: function(name, path, domain ) {
+        if( Game.get_cookie( name ) ) {
+          document.cookie = name + "=" +
+            ((path) ? ";path="+path:"")+
+            ((domain)?";domain="+domain:"") +
+            ";expires=Thu, 01 Jan 1970 00:00:01 GMT";
+        }
+      },
+      
+    get_cookie: function(name){
+          return document.cookie.split(';').some(c => {
+              return c.trim().startsWith(name + '=');
+          });
+      },
     gameLoop: function (delta) {
         Game.playState(delta);
     },

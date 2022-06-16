@@ -64,7 +64,7 @@ export let Pixi = {
     
         document.querySelector('.container').appendChild(Pixi.app.view);
     },
-    load: function (user, createGuestHandler, playHandler, handlerClick, gameLoop, loginGoogle) {
+    load: function (user, createGuestHandler, playHandler, logoutHanlder, handlerClick, gameLoop, loginGoogle) {
         Pixi.app.loader
             //.add(RESOURCE_PATH)
             .add('back_intro', 'img/back_intro.jpg')
@@ -80,7 +80,7 @@ export let Pixi = {
 
         Pixi.app.loader.load(() => {
             if (user) {
-                Pixi.showIntroAuthedScene(user, playHandler);
+                Pixi.showIntroAuthedScene(user, playHandler, logoutHanlder);
             } else {
                 Pixi.showIntroScene(createGuestHandler, loginGoogle);
             }
@@ -332,7 +332,7 @@ export let Pixi = {
         playGuestBtn.on("pointerdown", createGuestHandler);
         Pixi.introScene.addChild(playGuestBtn);
     },
-    showIntroAuthedScene: function(user, playGameHandler) {
+    showIntroAuthedScene: function(user, playGameHandler, logoutHanlder) {
         Pixi.introScene = new Container();
         Pixi.app.stage.addChild(Pixi.introScene);
 
@@ -362,9 +362,9 @@ export let Pixi = {
         // Start Button
         let logoutBtn = Pixi.getTextureSprite('logout');
         logoutBtn.position.set(230, 1178);
-        // startBtn.interactive = true;
-        // startBtn.buttonMode = true;
-        // startBtn.on("pointerdown", playGameHandler);
+        logoutBtn.interactive = true;
+        logoutBtn.buttonMode = true;
+        logoutBtn.on("pointerdown", logoutHanlder);
         Pixi.introScene.addChild(logoutBtn);   
     },
     showGameScene: function (User) {
