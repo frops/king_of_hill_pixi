@@ -14,7 +14,7 @@ console.log(window.location.hostname, "host");
 if (window.location.hostname == "bakla.games") {
     centrifugoHost = "wss://centrifugo.sopost.ru";
     BackendURL = "https://back.bakla.games";
-    MainURL = 'https://backla.games';
+    MainURL = 'https://bakla.games';
     Domain = 'bakla.games';
 }
 
