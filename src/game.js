@@ -134,14 +134,23 @@ export let Game = {
             // resetPointFlow(e, damage)
 
             Game.server.click(Game.user, function(resp) {
-                console.log(resp, 'resp5')
                 Game.pixi.updateUserDuration(resp.data.data.duration);
+                let count = resp.data.data.count;
+                let pointName = "point_item_pick";
+                if (count > 1) {
+                    pointName = "point_item_chest";
+                }
+
+                Pixi.startPointItems(pointName);
+            }, function(err) {
+                console.error(err, 'click err');
             })
         }
     },
-    clickHandler: function (data) {
-        Game.changeKing(data);
-    },
+    // clickHandler: function (data) {
+    //     Game.changeKing(data);
+    //     Pixi.startPointItems("point_item_pick");
+    // },
     logoutHanlder: function() {
         document.cookie = `jwt=;domain=.${Game.server.domain};path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`;
         window.location.href = Game.server.mainURL;
@@ -156,6 +165,8 @@ export let Game = {
         } else if (Game.timerClick > 0) {
             Game.timerClick--;
         }
+
+        Game.pixi.runPointItems();
 
         // Game.pixi.runRays();
         // runPointFlow();

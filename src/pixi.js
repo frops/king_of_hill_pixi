@@ -1,5 +1,6 @@
 import {autoDetectRenderer, Application, Container, Sprite, TilingSprite, Text, TextStyle, Graphics } from "pixi.js";
 import * as helpers from "./helpers.js";
+import { PointItems } from "./point_items.js";
 
 const RESOURCE_PATH = "spritesheet.json";
 const WIDTH = 720;
@@ -31,6 +32,9 @@ export let Pixi = {
     chooseChars: [],
     chosenChar: null,
     chosenCharText: "",
+
+    //Point Items
+    pointItems: {},
 
     //Textures
     originalBtnTexture: null,
@@ -77,6 +81,10 @@ export let Pixi = {
             .add('contest_logo', 'img/contest_logo.png')
             .add('no_king', 'img/no_king.png')
             .add('main_btn', 'img/main_btn.png');
+
+        for (let i = 0; i < PointItems.length; i++) {
+            Pixi.app.loader.add(PointItems[i].name, PointItems[i].path);
+        }
 
         Pixi.app.loader.load(() => {
             if (user) {
@@ -482,6 +490,72 @@ export let Pixi = {
             Pixi.leaderboard[i].name.text = leaderboard[i].name;
             Pixi.leaderboard[i].score.text = Pixi.getFormatedDuration(leaderboard[i].duration);
             Pixi.leaderboard[i].score.x = WIDTH - Pixi.leaderboard[i].score.width - 80;
+        }
+    },
+
+    // ANIMATIONS
+    newPointItem: function(pointName) {
+        const sprite = Pixi.getTextureSprite(pointName);
+        sprite.anchor.set(0.5);
+        Pixi.gameScene.addChild(sprite);
+
+        return {
+            sprite: sprite,
+            timer: 0,
+            sin: 0,
+            cos: 0,
+        };
+    },
+    startPointItems: function(pointName) {
+        let freePointIndex = null;
+
+        if (!Pixi.pointItems.hasOwnProperty(pointName)) {
+            Pixi.pointItems[pointName] = [Pixi.newPointItem(pointName)];
+            freePointIndex = 0;
+        } else {
+            console.log()
+            for (let i = 0; i < Pixi.pointItems[pointName].length; i++) {
+                if (Pixi.pointItems[pointName][i].timer < 1) {
+                    freePointIndex = i;
+                }
+            }
+        }
+
+        if (freePointIndex === null) {
+            Pixi.pointItems[pointName].push(Pixi.newPointItem(pointName));
+            freePointIndex = Pixi.pointItems[pointName].length - 1;
+        }
+
+        // Set selected free index to start poisition
+        Pixi.pointItems[pointName][freePointIndex].sin = helpers.getRandSin(180);
+        Pixi.pointItems[pointName][freePointIndex].cos = helpers.getRandCos(180);
+        Pixi.pointItems[pointName][freePointIndex].sprite.position.x = 360;
+        Pixi.pointItems[pointName][freePointIndex].sprite.position.y = 1066;
+        Pixi.pointItems[pointName][freePointIndex].sprite.alpha = 1;
+        Pixi.pointItems[pointName][freePointIndex].timer = 40;
+    },
+
+    runPointItems: function() {
+        if (Pixi.pointItems.length < 1) {
+            return;
+        }
+
+        const speed = 5;
+
+        for(let pointItemName in Pixi.pointItems) {
+            for (let i = 0; i < Pixi.pointItems[pointItemName].length; i++) {
+                if (Pixi.pointItems[pointItemName][i].timer < 1) {
+                    Pixi.pointItems[pointItemName][i].sprite.alpha = 0;
+                    continue;
+                }
+
+                Pixi.pointItems[pointItemName][i].sprite.position.x += Pixi.pointItems[pointItemName][i].sin * speed;
+                Pixi.pointItems[pointItemName][i].sprite.position.y += Pixi.pointItems[pointItemName][i].cos * speed;
+                Pixi.pointItems[pointItemName][i].sprite.alpha -= 0.01;
+                Pixi.pointItems[pointItemName][i].sprite.angle += 10;
+
+                Pixi.pointItems[pointItemName][i].timer--;
+            }
         }
     },
 

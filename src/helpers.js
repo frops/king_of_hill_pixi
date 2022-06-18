@@ -33,3 +33,15 @@ export function getCookieData(name) {
 export let time = Date.now || function() {
     return +new Date;
 };
+
+export function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+}
+
+export function getRandSin(maxRadius) {
+    return Math.sin(getRandomInt(maxRadius));
+}
+
+export function getRandCos(maxRadius) {
+    return Math.cos(getRandomInt(maxRadius));
+}
