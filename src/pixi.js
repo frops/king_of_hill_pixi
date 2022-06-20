@@ -527,12 +527,17 @@ export let Pixi = {
         }
 
         // Set selected free index to start poisition
-        Pixi.pointItems[pointName][freePointIndex].sin = helpers.getRandSin(180);
-        Pixi.pointItems[pointName][freePointIndex].cos = helpers.getRandCos(180);
+        let angle = (1 + 2 * Math.random()) * Math.PI / 2;
+        console.log(angle, 'angle');
+        
+        Pixi.pointItems[pointName][freePointIndex].sin = angle;//Math.sin(2 * Math.PI / 3);//helpers.getRandSin(2 * Math.PI / 3);
+        Pixi.pointItems[pointName][freePointIndex].cos = angle;//2 * Math.PI * Math.random();//Math.cos(2 * Math.PI / 3);//cos;
         Pixi.pointItems[pointName][freePointIndex].sprite.position.x = 360;
         Pixi.pointItems[pointName][freePointIndex].sprite.position.y = 1066;
         Pixi.pointItems[pointName][freePointIndex].sprite.alpha = 1;
-        Pixi.pointItems[pointName][freePointIndex].timer = 40;
+        Pixi.pointItems[pointName][freePointIndex].sprite.scale.x = 1;
+        Pixi.pointItems[pointName][freePointIndex].sprite.scale.y = 1;
+        Pixi.pointItems[pointName][freePointIndex].timer = 50;
     },
 
     runPointItems: function() {
@@ -540,7 +545,7 @@ export let Pixi = {
             return;
         }
 
-        const speed = 5;
+        const speed = 3;
 
         for(let pointItemName in Pixi.pointItems) {
             for (let i = 0; i < Pixi.pointItems[pointItemName].length; i++) {
@@ -550,9 +555,11 @@ export let Pixi = {
                 }
 
                 Pixi.pointItems[pointItemName][i].sprite.position.x += Pixi.pointItems[pointItemName][i].sin * speed;
-                Pixi.pointItems[pointItemName][i].sprite.position.y += Pixi.pointItems[pointItemName][i].cos * speed;
+                Pixi.pointItems[pointItemName][i].sprite.position.y -= Pixi.pointItems[pointItemName][i].cos * speed;
                 Pixi.pointItems[pointItemName][i].sprite.alpha -= 0.01;
                 Pixi.pointItems[pointItemName][i].sprite.angle += 10;
+                Pixi.pointItems[pointItemName][i].sprite.scale.x -= 0.01;
+                Pixi.pointItems[pointItemName][i].sprite.scale.y -= 0.01;
 
                 Pixi.pointItems[pointItemName][i].timer--;
             }
