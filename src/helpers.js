@@ -34,12 +34,19 @@ export let time = Date.now || function() {
     return +new Date;
 };
 
-export function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
+export function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min) + min);
 }
 
-export function getRandSin(maxRadius) {
-    return Math.sin(getRandomInt(maxRadius));
+export function getRandAngle(maxRadius) {
+    const minDegree = 85;
+    const maxDegree = 275;
+    let degrees = [
+        (Math.random()*minDegree),
+        (Math.random()*(360 - maxDegree)+maxDegree),
+    ];
+
+    return degrees[Math.round(Math.random() * 1)]/180*Math.PI;
 }
 
 export function getRandCos(maxRadius) {

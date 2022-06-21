@@ -5,6 +5,7 @@ import { PointItems } from "./point_items.js";
 const RESOURCE_PATH = "spritesheet.json";
 const WIDTH = 720;
 const HEIGHT = 1280;
+const POINT_ITEMS_TIMER = 60;
 
 export let Pixi = {
     app: null,
@@ -501,7 +502,9 @@ export let Pixi = {
 
         return {
             sprite: sprite,
+            toogledResize: false,
             timer: 0,
+            angle: 0,
             sin: 0,
             cos: 0,
         };
@@ -527,17 +530,18 @@ export let Pixi = {
         }
 
         // Set selected free index to start poisition
-        let angle = (1 + 2 * Math.random()) * Math.PI / 2;
-        console.log(angle, 'angle');
+        let angle = helpers.getRandAngle();
         
-        Pixi.pointItems[pointName][freePointIndex].sin = angle;//Math.sin(2 * Math.PI / 3);//helpers.getRandSin(2 * Math.PI / 3);
-        Pixi.pointItems[pointName][freePointIndex].cos = angle;//2 * Math.PI * Math.random();//Math.cos(2 * Math.PI / 3);//cos;
+        Pixi.pointItems[pointName][freePointIndex].sin = Math.sin(angle);
+        Pixi.pointItems[pointName][freePointIndex].cos = Math.cos(angle);
+        Pixi.pointItems[pointName][freePointIndex].angle = helpers.getRandomInt(4, 10);
         Pixi.pointItems[pointName][freePointIndex].sprite.position.x = 360;
         Pixi.pointItems[pointName][freePointIndex].sprite.position.y = 1066;
         Pixi.pointItems[pointName][freePointIndex].sprite.alpha = 1;
-        Pixi.pointItems[pointName][freePointIndex].sprite.scale.x = 1;
-        Pixi.pointItems[pointName][freePointIndex].sprite.scale.y = 1;
-        Pixi.pointItems[pointName][freePointIndex].timer = 50;
+        Pixi.pointItems[pointName][freePointIndex].sprite.scale.x = 0.3;
+        Pixi.pointItems[pointName][freePointIndex].sprite.scale.y = 0.3;
+        Pixi.pointItems[pointName][freePointIndex].timer = POINT_ITEMS_TIMER;
+        Pixi.pointItems[pointName][freePointIndex].toogledResize = false;
     },
 
     runPointItems: function() {
@@ -554,12 +558,26 @@ export let Pixi = {
                     continue;
                 }
 
+                let scale = 0.0;
+
+                if (Pixi.pointItems[pointItemName][i].toogledResize || Pixi.pointItems[pointItemName][i].sprite.scale.x >= 1.6) {
+                    scale = -0.04;
+                    Pixi.pointItems[pointItemName][i].toogledResize = true;
+                } else if(Pixi.pointItems[pointItemName][i].sprite.scale.x > 0) {
+                    scale = 0.05;
+                } else {
+                    scale = 0;
+                }
+
                 Pixi.pointItems[pointItemName][i].sprite.position.x += Pixi.pointItems[pointItemName][i].sin * speed;
                 Pixi.pointItems[pointItemName][i].sprite.position.y -= Pixi.pointItems[pointItemName][i].cos * speed;
-                Pixi.pointItems[pointItemName][i].sprite.alpha -= 0.01;
-                Pixi.pointItems[pointItemName][i].sprite.angle += 10;
-                Pixi.pointItems[pointItemName][i].sprite.scale.x -= 0.01;
-                Pixi.pointItems[pointItemName][i].sprite.scale.y -= 0.01;
+                
+                if (Pixi.pointItems[pointItemName][i].timer > (POINT_ITEMS_TIMER / 2)) {
+                    Pixi.pointItems[pointItemName][i].sprite.alpha -= 0.01;
+                }
+                Pixi.pointItems[pointItemName][i].sprite.angle += Pixi.pointItems[pointItemName][i].angle;
+                Pixi.pointItems[pointItemName][i].sprite.scale.x += scale;
+                Pixi.pointItems[pointItemName][i].sprite.scale.y += scale;
 
                 Pixi.pointItems[pointItemName][i].timer--;
             }
