@@ -66,7 +66,7 @@ export let Game = {
 
         if (Game.user && Game.user.isLoaded) {
             Game.pixi.showIntroName(Game.user.name);
-            setTimeout(Game.playHandler, 300);
+            //setTimeout(Game.playHandler, 300);
             return;
         }
     },
