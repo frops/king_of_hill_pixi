@@ -3,25 +3,31 @@ import { Game } from "./game.js";
 import { Server } from "./server.js";
 
 // let BackendURL = "https://back.kh.loc";
-let MainURL = 'https://kh.loc';
-let Domain = 'kh.loc';
-let BackendURL = "http://127.0.0.1:8084";
-let centrifugoHost = "wss://centrifugo.kh.loc";
+let serverContext = {
+    redirectURL: "https://tolocalhost.com",
+    mainURL: "https://kh.loc",
+    domain: "kh.loc",
+    backendURL: "http://127.0.0.1:8084",
+    //backendURL: "https://back.kh.loc", 
+    centrifugoHost: "wss://centrifugo.kh.loc"
+}
+
 const IS_DEV = true;
 
-console.log(window.location.hostname, "host");
-
 if (window.location.hostname == "bakla.games") {
-    centrifugoHost = "wss://centrifugo.sopost.ru";
-    BackendURL = "https://back.bakla.games";
-    MainURL = 'https://bakla.games';
-    Domain = 'bakla.games';
+    serverContext = {
+        redirectURL: "https://bakla.games",
+        mainURL: "https://bakla.games",
+        domain: "bakla.games",
+        backendURL: "https://back.bakla.games",
+        centrifugoHost: "wss://centrifugo.sopost.ru"
+    }
 }
 
 Pixi.init(IS_DEV);
 
 // Load server info
-Server.init(MainURL, Domain, BackendURL, centrifugoHost, Game.setKingFromWs).load(function(server) {
+Server.init(serverContext, Game.setKingFromWs).load(function(server) {
     // Init Game
     Game.init(server, Pixi);
     Game.loadUser();

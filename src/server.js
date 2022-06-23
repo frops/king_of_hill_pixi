@@ -1,3 +1,11 @@
+export let ServerContext = {
+    redirectURL: "",
+    mainURL: "",
+    domain: "",
+    backendURL: "",
+    centrifugoHost: ""
+};
+
 export let Server = {
     events: {},
     time: null,
@@ -5,24 +13,18 @@ export let Server = {
     version: "",
     noKing: "",
     isLoaded: false,
-    mainURL: "",
-    domain: "",
-    backendURL: "",
-    centrifugoHost: "",
+    context: null,
     setKingFromWs: null,
     googleCallback: null,
-    init: function (MainURL, Domain, BackendURL, CentrifugoHost, setKingFromWs) {
-        Server.mainURL = MainURL;
-        Server.domain = Domain;
-        Server.backendURL = BackendURL;
-        Server.centrifugoHost = CentrifugoHost;
+    init: function (context, setKingFromWs) {
+        Server.context = context;
         Server.setKingFromWs = setKingFromWs;
 
         return Server;
     },
     load: function (callback) {
         // Get main info/settings from server
-        axios.get(Server.backendURL + '/v1/info')
+        axios.get(Server.context.backendURL + '/v1/info')
             .then(function (response) {
                 let raw = response.data.data;
                 Server.time = new Date(raw.time).getTime();
@@ -42,7 +44,7 @@ export let Server = {
     // Get user info
     info: function(user, success, error) {
         axios.request({
-            url: Server.backendURL + '/v1/game/info',
+            url: Server.context.backendURL + '/v1/game/info',
             headers: { "Authorization": "Bearer " + user.jwt },
             withCredentials: true,
         })
@@ -56,7 +58,7 @@ export let Server = {
     // Get choose chars of user
     getChooseChars: function(user, success) {
         axios.request({
-            url: Server.backendURL + '/v1/chars/choose',
+            url: Server.context.backendURL + '/v1/chars/choose',
             headers: { "Authorization": "Bearer " + user.jwt },
             withCredentials: true,
         })
@@ -70,7 +72,7 @@ export let Server = {
     // Click request to server
     chooseChar: function(user, uuid, success, error) {
         axios.request({
-            url: Server.backendURL + '/v1/chars/choose',
+            url: Server.context.backendURL + '/v1/chars/choose',
             method: 'post',
             headers: {"Authorization": "Bearer " + user.jwt },
             withCredentials: true,
@@ -85,7 +87,7 @@ export let Server = {
     // Click request to server
     click: function(user, success, error) {
         axios.request({
-            url: Server.backendURL + '/v1/game/click',
+            url: Server.context.backendURL + '/v1/game/click',
             method: 'post',
             headers: {"Authorization": "Bearer " + user.jwt },
             withCredentials: true,
@@ -96,7 +98,7 @@ export let Server = {
         });
     },
     authGoogleUser: function(code, scope, success) {        
-        axios.get(Server.backendURL + `/v1/auth/google?code=${code}&scope=${scope}`)
+        axios.get(Server.context.backendURL + `/v1/auth/google?code=${code}&scope=${scope}`)
         .then(function (resp) {
             success(resp.data.data.token);
         })
@@ -107,7 +109,7 @@ export let Server = {
     createGuest: function (success, error) {
         try {
             return axios.request({
-                url: Server.backendURL + '/v1/user/guest',
+                url: Server.context.backendURL + '/v1/user/guest',
                 method: 'post',
                 withCredentials: true,
             }).then(function (response) {
@@ -118,7 +120,7 @@ export let Server = {
         }
     },
     wsInit: function () {
-        let centrifuge = new Centrifuge(Server.centrifugoHost + "/connection/websocket", {
+        let centrifuge = new Centrifuge(Server.context.centrifugoHost + "/connection/websocket", {
             debug: true
         });
         centrifuge.setToken(Server.token);
@@ -166,8 +168,9 @@ export let Server = {
     getGoogleLink: function() {
         let scope = encodeURIComponent('https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
         let clientId = '420026011536-opg41dihbickgolvjvjbqc6bjsutekat.apps.googleusercontent.com';
-        let redirectUri = encodeURIComponent(Server.mainURL);//encodeURIComponent('https://bakla.games/auth/google/callback');
+        let redirectUri = encodeURIComponent(Server.context.redirectURL);
         let state = makeid(16);
+        console.log(redirectUri,'redir');
         let authURL = `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${redirectUri}` + 
         `&prompt=consent&state=${state}&response_type=code&client_id=${clientId}&scope=${scope}&access_type=offline`;
 

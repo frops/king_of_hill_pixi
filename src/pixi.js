@@ -37,6 +37,9 @@ export let Pixi = {
     //Point Items
     pointItems: {},
 
+    // Graphics
+    expProgress: null,
+
     //Textures
     originalBtnTexture: null,
     targetBtn: null,
@@ -81,7 +84,8 @@ export let Pixi = {
             .add('click_btn', 'img/click_btn.png')
             .add('contest_logo', 'img/contest_logo.png')
             .add('no_king', 'img/no_king.png')
-            .add('main_btn', 'img/main_btn.png');
+            .add('main_btn', 'img/main_btn.png')
+            .add('level', 'img/level.png');
 
         for (let i = 0; i < PointItems.length; i++) {
             Pixi.app.loader.add(PointItems[i].name, PointItems[i].path);
@@ -129,15 +133,6 @@ export let Pixi = {
             Pixi.username.y = 39;
             scoreBar.addChild(Pixi.username);
 
-            Pixi.userScore = new Text("", new TextStyle({
-                fontFamily: "Verdana",
-                fontSize: 25,
-                fill: "#68D413"
-            }));
-            Pixi.userScore.x = WIDTH - Pixi.userScore.width - 100;
-            Pixi.userScore.y = 45;
-            scoreBar.addChild(Pixi.userScore);
-
             // Current user
             Pixi.kingNameText = new Text("", new TextStyle({
                 fontFamily: "Verdana",
@@ -166,6 +161,7 @@ export let Pixi = {
             // loadMan();
             // loadRays();
             Pixi.loadTargetBtn(handlerClick);
+            //Pixi.drawExpCircle(359);
             // loadPointFlow();
 
             Pixi.app.ticker.add(delta => gameLoop(delta));
@@ -378,7 +374,6 @@ export let Pixi = {
     },
     showGameScene: function (User) {
         let currentChar = User.GetChosenChar();
-        console.log(User, 'current user ');
         let chosenCharTextureName = 'char_' + currentChar.char.uuid;
         let chosenCharTexturePath = 'chars/' + currentChar.char.uuid + '.png';
         let textures = [{name: chosenCharTextureName, path: chosenCharTexturePath}];
@@ -399,6 +394,8 @@ export let Pixi = {
 
             let names = User.name.split(" ");
             Pixi.username.text = names[0] + "\n" + names[1];
+            //Pixi.charLevel.text = currentChar.level;
+            Pixi.updateExp(currentChar.exp, currentChar.remaining_exp, currentChar.level);
         });
     },
     showIntroName: function (name) {
@@ -411,21 +408,19 @@ export let Pixi = {
     },
     loadTargetBtn: function (handlerClick) {
         //Pixi.targetBtn = new TilingSprite(texture, 230, 235);
-        Pixi.targetBtn = Pixi.getTextureSprite('click_btn');
-        Pixi.targetBtn.position.set(0, 0);
-
-        Pixi.targetBtn.position.set(245, 951);
+        Pixi.targetBtn = Pixi.getTilingSprire('click_btn', 250, 250);
+        Pixi.targetBtn.position.set(235, 948);
         Pixi.targetBtn.interactive = true;
         Pixi.targetBtn.buttonMode = true;
         Pixi.targetBtn.on("pointerdown", handlerClick);
         Pixi.gameScene.addChild(Pixi.targetBtn);
     },
     toggleBtnState: function(press) {
-        // if (press) {
-        //     Pixi.targetBtn.tilePosition.y = 235;
-        // } else {
-        //     Pixi.targetBtn.tilePosition.y = 0;
-        // }
+        if (press) {
+            Pixi.targetBtn.tilePosition.y = 250;
+        } else {
+            Pixi.targetBtn.tilePosition.y = 0;
+        }
     },
     contestMode: function() {
         Pixi.noKing.visible = false;
@@ -473,9 +468,17 @@ export let Pixi = {
 
         return (Math.floor((duration / 1000) * 10) / 10) + ' K';
     },
-    updateUserDuration: function(duration) {
-        Pixi.userScore.text = Pixi.getFormatedDuration(duration);
-        Pixi.userScore.x = WIDTH - Pixi.userScore.width - 100;
+    updateExp: function(exp, remainingExp, level) {
+        const nextExp = exp + remainingExp;
+        const percent = (exp * 100) / nextExp;
+        const degree = percent * (360 / 100);
+
+        Pixi.drawExpCircle(degree, level);
+
+        // Pixi.charLevel.text = Pixi.getFormatedDuration(duration);
+        // Pixi.charLevel.x = WIDTH - Pixi.charLevel.width - 100;
+        // TODO increase EXP
+        // TODO increase LEVEL
     },
     changeLeaderBoard: function(leaderboard) {
         if (null == leaderboard) {
@@ -494,6 +497,43 @@ export let Pixi = {
         }
     },
 
+    // GRAPHICS
+    drawExpCircle: function(degree, level) {
+        const Radius = 40;
+        const X = 590;
+        const Y = 70;
+        const LineWidth = 15;
+        const OneDegree = Math.PI / 180;
+
+        console.log(degree, 'degree');
+        console.log(Pixi.expProgress, 'degree');
+
+        if (Pixi.expProgress == null) {
+            let graphics = new Graphics();
+            graphics.lineStyle(LineWidth, 0x0D5879, 1)
+                .beginFill(0x0D5879, 1)
+                .arc(X, Y, Radius, OneDegree * 270, OneDegree * (270 + 360));
+
+            Pixi.expProgress = new Graphics();
+            Pixi.expProgress.lineStyle(LineWidth, 0xC8E516, 1);
+
+            Pixi.charLevel = new Text(level, new TextStyle({
+                fontFamily: "Verdana",
+                fontSize: 25,
+                fill: "#FFF",
+                fontWeight: "bold"
+            }));
+            Pixi.charLevel.y = 55;
+            
+            Pixi.gameScene.addChild(graphics);
+            Pixi.gameScene.addChild(Pixi.expProgress);
+            Pixi.gameScene.addChild(Pixi.charLevel);
+        }
+
+        Pixi.charLevel.x = (600 - Pixi.charLevel.width);
+        Pixi.expProgress.arc(X, Y, Radius, OneDegree * 270, OneDegree * (270 + degree));
+    },
+    
     // ANIMATIONS
     newPointItem: function(pointName) {
         const sprite = Pixi.getTextureSprite(pointName);
@@ -588,6 +628,9 @@ export let Pixi = {
 
     getTextureSprite: function(name) {
         return new Sprite(Pixi.app.loader.resources[name].texture);
+    },
+    getTilingSprire: function(name, width, height) {
+        return new TilingSprite(Pixi.app.loader.resources[name].texture, width, height);
     },
     getInteractiveSprite: function(name, x, y, handler) {
         let btn = Pixi.getTextureSprite(name);

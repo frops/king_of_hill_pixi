@@ -8,6 +8,7 @@ export let Game = {
     chars: [],
     pixi: null,
     state: null,
+    kingState: "",
     timerClick: 0,
     buttonClick: true,
     everySecTimer: null,
@@ -55,8 +56,8 @@ export let Game = {
             Game.server.authGoogleUser(Game.server.googleCallback.code, Game.server.googleCallback.scope, function(token) {
                 var date = new Date();
                 let expires = date.setDate(date.getDate() + 7 * 86400 * 1000);
-                document.cookie = `jwt=${token}; domain=.${Game.server.domain}; path=/; expires=${expires.toString()}`;
-                window.location.href = Game.server.mainURL + "?state=play";
+                document.cookie = `jwt=${token}; domain=.${Game.server.context.domain}; path=/; expires=${expires.toString()}`;
+                window.location.href = Game.server.context.mainURL + "?state=play";
             });
         }
 
@@ -65,6 +66,7 @@ export let Game = {
 
         if (Game.user && Game.user.isLoaded) {
             Game.pixi.showIntroName(Game.user.name);
+            setTimeout(Game.playHandler, 300);
             return;
         }
     },
@@ -72,8 +74,8 @@ export let Game = {
         Game.server.createGuest(function(token) {
             var date = new Date();
             let expires = date.setDate(date.getDate() + 7 * 86400 * 1000);
-            document.cookie = `jwt=${token}; domain=.${Game.server.domain}; path=/; expires=${expires.toString()}`;
-            window.location.href = Game.server.mainURL + "?state=play";
+            document.cookie = `jwt=${token}; domain=.${Game.server.context.domain}; path=/; expires=${expires.toString()}`;
+            window.location.href = Game.server.context.mainURL + "?state=play";
         });
     },
     playHandler: function (e) {
@@ -128,23 +130,27 @@ export let Game = {
 
         if (Game.buttonClick == true) {
             Game.buttonClick = false;
-            Game.timerClick = 10;
+            Game.timerClick = 3;
 
             Game.pixi.toggleBtnState(true);
             // resetPointFlow(e, damage)
 
-            Game.server.click(Game.user, function(resp) {
-                Game.pixi.updateUserDuration(resp.data.data.duration);
-                let count = resp.data.data.count;
-                let pointName = "point_item_pick";
-                if (count > 1) {
-                    pointName = "point_item_chest";
-                }
+            if (true || Game.kingState == "contest") {
+                Game.server.click(Game.user, function(resp) {
+                    Game.user.IncrementExp(resp.data.data.count);
+                    let chosenChar = Game.user.GetChosenChar();
+                    Game.pixi.updateExp(chosenChar.exp, chosenChar.remaining_exp, chosenChar.level);
+                    let pointName = "point_item_pick";
 
-                Pixi.startPointItems(pointName);
-            }, function(err) {
-                console.error(err, 'click err');
-            })
+                    if (resp.data.data.count > 1) {
+                        pointName = "point_item_chest";
+                    }
+
+                    Pixi.startPointItems(pointName);
+                }, function(err) {
+                    console.error(err, 'click err');
+                })
+            }
         }
     },
     // clickHandler: function (data) {
@@ -152,8 +158,8 @@ export let Game = {
     //     Pixi.startPointItems("point_item_pick");
     // },
     logoutHanlder: function() {
-        document.cookie = `jwt=;domain=.${Game.server.domain};path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`;
-        window.location.href = Game.server.mainURL;
+        document.cookie = `jwt=;domain=.${Game.server.context.domain};path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`;
+        window.location.href = Game.server.context.mainURL;
     },
     gameLoop: function (delta) {
         Game.playState(delta);
@@ -189,8 +195,9 @@ export let Game = {
     },
 
     startKingTime: function(data) {
+        Game.kingState = "king_time";
+
         if (!data.user || data.user.uuid == Game.noKing) {
-            console.log("no king");
             Game.pixi.noKing.visible = true;
             return;
         }
@@ -203,6 +210,8 @@ export let Game = {
     },
 
     startContest: function() {
+        Game.kingState = "contest";
+
         Pixi.contestMode();
     }
 };

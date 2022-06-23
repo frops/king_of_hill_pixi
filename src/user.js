@@ -1,3 +1,4 @@
+import { uniformParsers } from "pixi.js";
 import * as helpers from "./helpers.js";
 
 export let User = {
@@ -34,17 +35,40 @@ export let User = {
             User.chars = chars;
         }
     },
-    GetChosenChar: function() {
+    IncrementExp: function(amount) {
+        let chosenIndex = User.GetChosenCharIndex();
+
+        if (chosenIndex === null) {
+            return null;
+        }
+
+        User.chars[chosenIndex].exp += amount;
+        User.chars[chosenIndex].remaining_exp -= amount;
+        if (User.chars[chosenIndex].remaining_exp <= 0) {
+            User.chars[chosenIndex].level++;
+            User.chars[chosenIndex].remaining_exp=1000;//TODO change to get level from server
+        }
+    },
+    GetChosenCharIndex: function() {
         if (User.chars.length < 1) {
             return null;
         }
 
         for (let i = 0; i < User.chars.length; i++) {
             if (User.chars[i].is_chosen) {
-                return User.chars[i];
+                return i;
             }
         }
 
         return null;
+    },
+    GetChosenChar: function() {
+        let chosenIndex = User.GetChosenCharIndex();
+
+        if (chosenIndex === null) {
+            return null;
+        }
+
+        return User.chars[chosenIndex];
     }
 }
